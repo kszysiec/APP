@@ -27,6 +27,7 @@
               action="Zobacz źródła" 
               image="/src/assets/btn-logo.png" 
               actionTo="/files"
+              color="indigo"
             />
           </v-col>
           <v-col>
@@ -36,6 +37,7 @@
               action="Zobacz treści" 
               image="/src/assets/btn-logo.png" 
               actionTo="/queries"
+              color="indigo"
             />
           </v-col>
         </v-row>  
@@ -48,6 +50,7 @@
               action="Zobacz kategorie" 
               image="/src/assets/btn-logo.png" 
               actionTo="/categories"
+              color="indigo"
             />
           </v-col>
           <v-col>
@@ -57,6 +60,7 @@
               action="Zobacz oznaczenia" 
               image="/src/assets/btn-logo.png" 
               actionTo="/tags"
+              color="indigo"
             />
           </v-col>
         </v-row>  
