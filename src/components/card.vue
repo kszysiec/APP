@@ -13,7 +13,7 @@
    <v-card width="900" class="mx-2 rounded-lg">
     
    <v-toolbar
-      v-if="card==1 || card==2 || card==3"
+      v-if="card=='1' || card=='2' || card=='3'"
       flat
       color="success"
       dark
@@ -57,7 +57,7 @@
   </v-toolbar>
     
   <v-toolbar
-      v-if="card==4 || card==5"
+      v-if="card=='4' || card=='5'"
       flat
       color="orange-darken-1"
       dark
@@ -66,7 +66,7 @@
       <v-icon>mdi-account-star</v-icon>
       <v-tooltip location="bottom" activator="parent">
         <v-alert
-          type="orange-darken-1"
+          color="orange-darken-1"
           icon="mdi-account-star"
           title="Wygląda na bardzo pomocne, zgodność w 75%"
           text="Taką kategorię dostają wzmianki, fragmenty tekstu w przypadku wystarczająco dobrego dopasowania do zapytania"
@@ -101,7 +101,7 @@
   </v-toolbar>
 
   <v-toolbar
-      v-if="card==6 || card==7"
+      v-if="card=='6' || card=='7'"
       flat
       color="blue"
       dark
@@ -110,7 +110,7 @@
       <v-icon>mdi-account-star</v-icon>
       <v-tooltip location="bottom" activator="parent">
         <v-alert
-          type="blue"
+          color="blue"
           icon="mdi-account-star"
           title="Na pewno się przyda, zgodność w 50%"
           text="Taką kategorię dostają wzmianki, fragmenty tekstu w przypadku dość dobrego dopasowania do zapytania"
@@ -145,7 +145,7 @@
   </v-toolbar>
 
   <v-toolbar
-      v-if="card==8"
+      v-if="card=='8'"
       flat
       color="grey"
       dark
@@ -154,7 +154,7 @@
       <v-icon>mdi-account-star</v-icon>
       <v-tooltip location="bottom" activator="parent">
         <v-alert
-          type="blue"
+          color="blue"
           icon="mdi-account-star"
           title="Nie wiadomo, zgodność tylko w 25%"
           text="Taką kategorię dostają wzmianki, fragmenty tekstu w przypadku słabego dopasowania do zapytania, które jednak nie powinny być pominięte"
@@ -272,7 +272,7 @@ object instantiation).  </p>
       <v-icon>mdi-account-star</v-icon>
       <v-tooltip location="bottom" activator="parent">
         <v-alert
-          type="orange-darken-1"
+          color="orange-darken-1"
           icon="mdi-account-star"
           title="Możesz zmienić nasze wskazanie na : Pomocne ! Wygląda na bardzo pomocne, zgodność w 75%."
           text="Taką kategorię dostają wzmianki, fragmenty tekstu w przypadku wystarczająco dobrego dopasowania do zapytania"
@@ -283,7 +283,7 @@ object instantiation).  </p>
       <v-icon>mdi-account-star</v-icon>
       <v-tooltip location="bottom" activator="parent">
         <v-alert
-          type="blue"
+          color="blue"
           icon="mdi-account-star"
           title="Możesz zmienić nasze wskazanie na : Przyda się ! Na pewno się przyda, zgodność w 50%"
           text="Taką kategorię dostają wzmianki, fragmenty tekstu w przypadku dość dobrego dopasowania do zapytania"
@@ -294,7 +294,7 @@ object instantiation).  </p>
       <v-icon>mdi-account-star</v-icon>
       <v-tooltip location="bottom" activator="parent">
         <v-alert
-          type="grey"
+          color="grey"
           icon="mdi-account-star"
           title="Możesz zmienić nasze wskazanie na : Szkoda aby umknęło ! Wygląda na bardzo pomocne, zgodność w 75%."
           text="Taką kategorię dostają wzmianki, fragmenty tekstu w przypadku wystarczająco dobrego dopasowania do zapytania"
@@ -360,7 +360,8 @@ object instantiation).  </p>
 </div>
 </template>
 
-<script>
+<script lang="ts">
+
 import interact from "interact.js";
 const ACCEPT_CARD = "cardAccepted";
 const REJECT_CARD = "cardRejected";
