@@ -1,7 +1,11 @@
+<script setup lang="ts">
+    import logo from "../assets/btn-logo.png"
+</script>
+
 <template>
     <v-card class="mx-auto">
       <v-img
-        src="/src/assets/btn-logo.png"
+        :src="logo"
         height="128px"
         cover
       ></v-img>
@@ -56,7 +60,7 @@
                     <v-card max-width="900px">
 
                         <v-img
-                            src="/src/assets/btn-logo.png"
+                            :src="logo"
                             height="128px"
                             cover
                         ></v-img>
