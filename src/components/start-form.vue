@@ -1,11 +1,47 @@
 <script lang="ts">
+
+  import { PDFLoader } from "langchain/document_loaders/fs/pdf";
+  import { Buffer } from "buffer";
+  import { PDFJS } from "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js";
+
   export default {
     data: () => ({
       step: 1,
-      progress : 34
+      progress : 0,
+      searchText : "",
+      pdfFiles : null
     }),
     created() {
+      PDFJS.workerSrc = "pdf.worker.js";
+      globalThis.Buffer = Buffer;
       this.step = 1
+    },
+    methods:
+    {
+      onFileChange(e) {
+        if (!e) {
+          return;
+        }
+        this.pdfFiles = e.target.files;
+      }
+    },
+    watch: {
+    step: async function(val) { 
+        if (val == 3)
+        {
+          if (this.pdfFiles)
+          {
+            for (const file of this.pdfFiles) {
+              const loader = new PDFLoader(file);
+              var doc = await loader.load();
+                doc.forEach(element => {
+                  //alert(element.pageContent.toString()); 
+                });
+              //alert(file.name);   
+            }
+          }
+        }
+      }
     }
   }
 </script>
@@ -40,6 +76,7 @@
                   counter
                   chips
                   class="mb-2 text-h5"
+                  @change="onFileChange"
                 ></v-file-input>
                 <span class="text-grey-darken-1 text-h5">
                   Wskaż pliki, które chcesz przeszukiwać
@@ -50,6 +87,7 @@
             <v-window-item :value="2">
               <v-card-text>
                 <v-textarea
+                    v-model="searchText"
                     label="Wpisz treść do wyszukiwania"
                     auto-grow
                     variant="outlined"
