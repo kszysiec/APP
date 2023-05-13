@@ -52,7 +52,10 @@
   <script lang="ts">
     import { register } from 'vue-advanced-chat'
     register()
-  
+    import { ChatOpenAI } from "langchain/chat_models/openai";
+    import { HumanChatMessage } from "langchain/schema";
+    const chat =  new ChatOpenAI({ openAIApiKey: "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", temperature: 0.9 });
+
     export default {
       data() {
         return {
@@ -163,7 +166,7 @@
         }
       },
       computed: {
-		screenHeight() {
+		  screenHeight() {
 			return this.isDevice ? window.innerHeight + 'px' : 'calc(100vh - 300px)'
 		}
 	  },
@@ -199,11 +202,16 @@
             }
             this.messages = [...this.messages, msg]
             this.messagesLoaded = false
+            const resContent = await chat.call([
+              new HumanChatMessage(
+                content
+              ),
+            ]);
             var odpowiedz = {
                 _id: '7892',
                 indexId: 12094,
                 senderId: '1234',
-                content: 'Kolejna odpowiedź na zadane pytanie, związana z treścią dokumentów i zadanym pytaniem',
+                content: resContent,
                 username: 'Brainiverse Assistant',
                 avatar: '/src/assets/robot-finding-data.png',
                 date: '13 Listopada',

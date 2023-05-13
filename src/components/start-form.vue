@@ -3,6 +3,9 @@
   import { PDFLoader } from "langchain/document_loaders/fs/pdf";
   import { Buffer } from "buffer";
   import { PDFJS } from "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js";
+  import nlp  from "wink-nlp";
+  import model from "wink-eng-lite-web-model";
+
 
   export default {
     data: () => ({
@@ -33,11 +36,16 @@
           {
             for (const file of this.pdfFiles) {
               const loader = new PDFLoader(file);
+              const winknlp = nlp(model);
               var doc = await loader.load();
                 doc.forEach(element => {
-                  //alert(element.pageContent.toString()); 
+                  //alert(element.pageContent.toString());
+                  //string.match(/[^.?!]+[.!?]+[\])'"`’”]*/g);
+                  //console.log(element.pageContent.toString().match(/[^\.!\?]+/g)) 
+                  const doc = winknlp.readDoc(element.pageContent.toString());
+                  console.log(doc.sentences().out() );
                 });
-              //alert(file.name);   
+              alert(file.name);   
             }
           }
         }
