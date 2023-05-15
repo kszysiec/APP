@@ -1,27 +1,10 @@
 <script lang="ts">
-    import { loki } from "lokijs";
+    import loki from "lokijs";
     import { VectorStorage } from "vector-storage";
 
     export default {
     data: () => ({
-      items: [
-        {
-          id : 1,
-          title: 'temat 1'
-        },
-        {
-          id : 2,
-          title: 'temat 2'
-        },
-        {
-          id : 3,
-          title: 'temat 3'
-        },
-        {
-          id : 4,
-          title: 'temat 4'
-        },
-      ],
+      items: getAll(),
       selection: [1]
     }),
     methods: {
@@ -37,7 +20,7 @@
               autosave: true, 
               autosaveInterval: 4000            }
             );
-            var users = db.addCollection('users', { indices: ['email'] });
+            var users = db.addCollection('users', { indices: ['email','name','age'] });
             var odin = users.insert( { name : 'odin', email: 'odin.soap@lokijs.org', age: 38 } );
             var thor = users.insert( { name : 'thor', email : 'thor.soap@lokijs.org', age: 25 } );
             var stan = users.insert( { name : 'stan', email : 'stan.soap@lokijs.org', age: 29 } );
@@ -47,10 +30,10 @@
             var odin2 = users.findOne({name: "odin" });
             users.remove(odin2);
             var results = users.where(this.ageView);
-            //alert(results[0].email);
+            console.log(results[0].email);
             users.find().forEach(function(user)
             {
-                //alert(user.email);
+                console.log(user.email);
             });
             db.saveDatabase();
             alert('koniec'); 
@@ -62,6 +45,7 @@
               query: "Babcia przygotowuje obiad",
             });
             console.log(wynik);
+            setCurrent(this.selection[0]);
       }
     }
   }

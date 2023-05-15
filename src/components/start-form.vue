@@ -3,7 +3,7 @@
   import { PDFLoader } from "langchain/document_loaders/fs/pdf";
   import { Buffer } from "buffer";
   import { PDFJS } from "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js";
-  import nlp  from "wink-nlp";
+  import nlp from "wink-nlp";
   import model from "wink-eng-lite-web-model";
 
 
