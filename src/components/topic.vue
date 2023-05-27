@@ -1,5 +1,6 @@
 <script setup lang="ts">
-    import logo from "../assets/btn-logo.png"
+    import logo from "../assets/bg.png"
+    import { getCurrentTopicTitle, getCurrentTopicQuery, getKey } from '@/composables/db-repo'
 </script>
 
 <template>
@@ -11,7 +12,7 @@
       ></v-img>
   
       <v-card-title  class="text-h5">
-        Tekst wyszukiwany dla aktualnego tematu, może składać się z wielu zdań i zajmować nawet kilka linijek, tutaj jednak będzie skrócony
+        {{ getCurrentTopicTitle() }}
       </v-card-title>
   
       <v-card-subtitle>
@@ -34,6 +35,7 @@
                         size="x-large"
                         rounded="lg"
                         class="text-none"
+                        v-if="getKey('currentTopic')"
                         >
                         Bieżący temat
                         </v-btn>
@@ -73,7 +75,7 @@
                         <v-banner-text class="text-h5">
                             <div class="text-h4 mb-5">Jakich treści szukamy w danym temacie ?</div>  
                             <v-divider></v-divider>
-                            <div class="text-h5 ma-5">Tutaj jest treść wyszukiwana dla aktualnego tematu, może składać się z wielu zdań i zajmować nawet kilka linijek</div>
+                            <div class="text-h5 ma-5">{{ getCurrentTopicQuery() }}</div>
                         </v-banner-text>
                         <template v-slot:prepend>
                             <v-icon size="80" icon="mdi-message-text-outline" color="success"></v-icon>
@@ -120,9 +122,10 @@
                         size="x-large"
                         rounded="lg"
                         class="text-none"
+                        v-if="getKey('currentTopic')"
                         >
                         Zmień temat
-                        </v-btn>
+                    </v-btn>
                 </template>
 
                 <v-card class="mx-auto">
@@ -213,7 +216,7 @@
         <div v-show="show">
           <v-divider></v-divider>
             <v-card-text>
-                Tekst wyszukiwany dla aktualnego tematu, może składać się z wielu zdań i zajmować nawet kilka linijek, tutaj jednak nie będzie skrócony jak w nagłówku, będzie pokazana cała treść
+                {{getCurrentTopicQuery()}}
             </v-card-text>
         </div>
       </v-expand-transition>

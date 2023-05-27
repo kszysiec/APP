@@ -9,6 +9,7 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    Api: typeof import('./src/components/api.vue')['default']
     Card: typeof import('./src/components/card.vue')['default']
     CardsStack: typeof import('./src/components/cards-stack.vue')['default']
     Categories: typeof import('./src/components/categories.vue')['default']

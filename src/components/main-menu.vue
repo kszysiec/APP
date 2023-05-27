@@ -29,7 +29,7 @@
             <menu-block 
               color="blue"
               title="Pasujące fragmenty" 
-              text="Kolejno przeglądamy odszukane pasujące fragmenty dla aktualnego tematu" 
+              text="Kolejno przeglądamy pasujące fragmenty dla aktualnego tematu" 
               action="Przeglądaj" 
               image="mdi-shuffle" 
               actionTo="/items"
@@ -39,23 +39,10 @@
             <menu-block 
               color="orange-darken-1"
               title="Opisane fragmenty" 
-              text="Przeglądamy wszystkie listy odszukanych i wybranych fragmentów dla aktualnego tematu" 
+              text="Przeglądamy wszystkie listy wybranych fragmentów dla aktualnego tematu" 
               action="Analizuj" 
               image="mdi-checkbox-multiple-marked-outline" 
               actionTo="/results"
-            />
-          </v-col>
-        </v-row>  
-
-        <v-row>
-          <v-col>
-            <menu-block 
-              color="grey"
-              title="Tryb rozmowy" 
-              text="Wykorzystaj tryb rozmowy na temat szczegółów załączonego dokumentu" 
-              action="Rozmawiaj" 
-              image="mdi-comment-multiple-outline" 
-              actionTo="/chat"
             />
           </v-col>
           <v-col>
@@ -70,7 +57,7 @@
           </v-col>
         </v-row>  
 
-      </v-container>
+       </v-container>
       </v-main>
     </v-layout>
   </v-card>
