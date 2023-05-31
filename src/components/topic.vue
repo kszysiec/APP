@@ -1,6 +1,27 @@
 <script setup lang="ts">
-    import logo from "../assets/bg.png"
     import { getCurrentTopicTitle, getCurrentTopicQuery, getKey } from '@/composables/db-repo'
+    import logo from "../assets/bg.png"
+</script>
+
+<script lang="ts">
+    import StartForm from './start-form.vue'
+    import FilesList from './files-list.vue'
+
+    export default {
+    components: { StartForm, FilesList },
+    data: () => ({
+        show: false,
+        dialog_details: false,
+        dialog_selection: false,
+        dialog_new: false,
+        currentTopicTitle:"brak bieżącego tematu",
+        currentTopicQuery:"brak bieżącego tematu"
+    }),
+    mounted() {
+        this.currentTopicTitle = getCurrentTopicTitle();
+        this.currentTopicQuery = getCurrentTopicQuery();
+    } 
+    }
 </script>
 
 <template>
@@ -11,8 +32,8 @@
         cover
       ></v-img>
   
-      <v-card-title  class="text-h5">
-        {{ getCurrentTopicTitle() }}
+      <v-card-title class="text-h5">
+        {{ this.currentTopicTitle }}
       </v-card-title>
   
       <v-card-subtitle>
@@ -75,7 +96,7 @@
                         <v-banner-text class="text-h5">
                             <div class="text-h4 mb-5">Jakich treści szukamy w danym temacie ?</div>  
                             <v-divider></v-divider>
-                            <div class="text-h5 ma-5">{{ getCurrentTopicQuery() }}</div>
+                            <div class="text-h5 ma-5">{{ this.currentTopicQuery }}</div>
                         </v-banner-text>
                         <template v-slot:prepend>
                             <v-icon size="80" icon="mdi-message-text-outline" color="success"></v-icon>
@@ -138,7 +159,7 @@
                     <v-btn
                         icon
                         dark
-                        @click="dialog_selection = false"
+                        @click="dialog_selection = false; this.currentTopicTitle = getCurrentTopicTitle();this.currentTopicQuery = getCurrentTopicQuery();"
                     >
                         <v-icon>mdi-close</v-icon>
                     </v-btn>
@@ -216,29 +237,13 @@
         <div v-show="show">
           <v-divider></v-divider>
             <v-card-text>
-                {{getCurrentTopicQuery()}}
+                {{ this.currentTopicQuery }}
             </v-card-text>
         </div>
       </v-expand-transition>
 
     </v-card>
-  </template>
-
-<script lang="ts">
-
-import StartForm from './start-form.vue'
-import FilesList from './files-list.vue'
-
-export default {
-    components: { StartForm, FilesList },
-    data: () => ({
-        show: false,
-        dialog_details: false,
-        dialog_selection: false,
-        dialog_new: false
-    }),
-}
-</script>
+</template>
 
 <style>
 .dialog-bottom-transition-enter-active,

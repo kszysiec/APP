@@ -1,22 +1,16 @@
 <script lang="ts">
 
-  import { PDFLoader } from "langchain/document_loaders/fs/pdf";
-  import { Buffer } from "buffer";
-  import { PDFJS } from "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js";
-  import nlp from "wink-nlp";
-  import model from "wink-eng-lite-web-model";
-
+  import { prepareNewTopic, prepareNewTopicFile } from '@/composables/db-repo'
 
   export default {
     data: () => ({
       step: 1,
       progress : 0,
       searchText : "",
-      pdfFiles : null
+      pdfFiles : null,
+      key:0
     }),
     created() {
-      PDFJS.workerSrc = "pdf.worker.js";
-      globalThis.Buffer = Buffer;
       this.step = 1
     },
     methods:
@@ -32,21 +26,18 @@
     step: async function(val) { 
         if (val == 3)
         {
-          if (this.pdfFiles)
+          if (this.searchText && this.searchText!="")
           {
-            for (const file of this.pdfFiles) {
-              const loader = new PDFLoader(file);
-              const winknlp = nlp(model);
-              var doc = await loader.load();
-                doc.forEach(element => {
-                  //alert(element.pageContent.toString());
-                  //string.match(/[^.?!]+[.!?]+[\])'"`’”]*/g);
-                  //console.log(element.pageContent.toString().match(/[^\.!\?]+/g)) 
-                  const doc = winknlp.readDoc(element.pageContent.toString());
-                  console.log(doc.sentences().out() );
-                });
-              alert(file.name);   
+            this.key = await prepareNewTopic(this.searchText);
+            this.progress = 10;
+            if (this.pdfFiles)
+            {
+              for (const file of this.pdfFiles) {
+                await prepareNewTopicFile(this.key, file, file.name);
+                this.progress = this.progress+(90/(this.pdfFiles.length));
+              }
             }
+            this.progress = 100;
           }
         }
       }
@@ -128,9 +119,8 @@
                       v-model="progress"
                       color="blue-grey"
                       rounded
-                      indeterminate
                       height="25"
-                    ><strong>34%</strong></v-progress-linear>
+                    ><strong>{{ Math.ceil(progress) }}%</strong></v-progress-linear>
                   </v-col>
                 </v-row>
                 <span class="text-caption text-grey text-h5">Kiedy zakończy się przetwarzanie możesz przejść do przeglądania tego co udało się już znaleźć</span>
@@ -175,7 +165,7 @@
             Kolejny krok
           </v-btn>
           <v-btn
-            v-if="step >= 3"
+            v-if="step >= 3 && progress==100"
             size="x-large" color="green-lighten-1" variant="elevated"
             @click="step=0"
           >

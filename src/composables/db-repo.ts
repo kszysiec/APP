@@ -1,5 +1,10 @@
 import loki from "lokijs";
 import { VectorStorage } from "vector-storage";
+import { PDFLoader } from "langchain/document_loaders/fs/pdf";
+import { Buffer } from "buffer";
+import { PDFJS } from "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js";
+import nlp from "wink-nlp";
+import model from "wink-eng-lite-web-model";
 
 class KeyData {
   name: string;
@@ -11,6 +16,7 @@ class TopicData
   id : number;
   title: string;
   query: string;
+  files: string[];
 }
 
 type DB = IDBDatabase;
@@ -18,23 +24,35 @@ type Store = IDBObjectStore;
 
 const queryLabelLength = 100;
 
-var db_keys = initKeys();
-var db_topics = initTopics();
+var db = initDB(); 
+
+initKeys();
+initTopics();
+
+var vectorStore:VectorStorage = null;
+
+PDFJS.workerSrc = "pdf.worker.js";
+globalThis.Buffer = Buffer;
 
 export function getAllTopics() {
-  var topics = db_topics.getCollection<TopicData>('topics');
+  var topics = db.getCollection<TopicData>('topics');
   return topics.find();
 }
 
-function initTopics()
+function initDB()
 {
   var db = new loki('ra.db', 
   { 
     autoload: true,
     autosave: true, 
-    autosaveInterval: 2000            
+    autosaveInterval: 1000            
   }
   );
+  return db;
+}
+
+function initTopics()
+{
   var topics = db.getCollection<TopicData>('topics');
   if (!topics)
   {
@@ -42,35 +60,67 @@ function initTopics()
       unique: <["id"]>["id"],
       indices: <["id"]>["id"],
       autoupdate: true
-  });
+    });
   }
-  return db;
 }
 
-export function setTopicQuery(key:number, query:string) {
-  var topics = db_topics.getCollection<TopicData>('topics');
-  var data = topics.by('id', key);
-  if (data)
-  {
-    data.query = query;
-    data.title = substringQuery(query);
-    topics.update(data);
+function setTopicQuery(query:string) {
+   var topics = db.getCollection<TopicData>('topics');
+   if (topics)
+   {
+       var newDoc = topics.insert( { id:topics.maxId+1, query: query, title : substringQuery(query), files: null } );
+       return newDoc.id;
   }
-  else
+}
+
+function setTopicFileName(key:number, fileName:string) {
+  var topics = db.getCollection<TopicData>('topics');
+  if (topics)
   {
-    topics.insert( { id : key, query: query, title : substringQuery(query) } );
+    var data = topics.by('id', key);
+    if (data)
+    {
+      if (data.files == null)
+      {
+        data.files = [];
+      }
+      data.files.push(fileName);
+      topics.update(data);
+    }
   }
+}
+
+export function getCurrentTopicFiles() {
+  var currentId = getKey("currentTopic");
+  console.log("getCurrentTopicFiles:"+currentId);
+  if (currentId)
+  {
+    var topics = db.getCollection<TopicData>('topics');
+    if (topics)
+    {
+      var data = topics.by('id', currentId);
+      if (data)
+      {
+          return data.files;
+      }
+    }
+  }
+  return [];
 }
 
 export function getCurrentTopicQuery() {
   var currentId = getKey("currentTopic");
+  console.log("getCurrentTopicQuery:"+currentId);
   if (currentId)
   {
-    var topics = db_topics.getCollection<TopicData>('topics');
-    var data = topics.by('id', currentId);
-    if (data)
+    var topics = db.getCollection<TopicData>('topics');
+    if (topics)
     {
-        return data.query;
+      var data = topics.by('id', currentId);
+      if (data)
+      {
+          return data.query;
+      }
     }
   }
   return "brak bieżącego tematu";
@@ -78,13 +128,17 @@ export function getCurrentTopicQuery() {
 
 export function getCurrentTopicTitle() {
   var currentId = getKey("currentTopic");
+  console.log("getCurrentTopicTitle:"+currentId);
   if (currentId)
   {
-    var topics = db_topics.getCollection<TopicData>('topics');
-    var data = topics.by('id', currentId);
-    if (data)
+    var topics = db.getCollection<TopicData>('topics');
+    if (topics)
     {
-        return data.title;
+      var data = topics.by('id', currentId);
+      if (data)
+      {
+          return data.title;
+      }
     }
   }
   return "brak bieżącego tematu";
@@ -102,7 +156,95 @@ function substringQuery(query:string)
   }
 }
 
-export function SaveFile(file: File, fileName: string)
+export async function prepareNewTopic(searchText:string)
+{
+  if (searchText && searchText!="" && getKey("apiKey")!="")
+  {
+    console.log("prepareNewTopic:"+searchText);
+    var key = setTopicQuery(searchText);
+    setKey("currentTopic", key.toString());
+    return key;
+  }
+  return 0;
+}
+
+export async function prepareNewTopicFile(key:number, file:File, fileName: string)
+{
+  if (key > 0 && file && getKey("apiKey")!="")
+  {
+    if (vectorStore==null)
+    {
+      vectorStore = new VectorStorage({ openAIApiKey: getKey("apiKey") });
+    }
+    console.log("prepareNewTopicFile:"+fileName);
+    saveFile(file, fileName);
+    setTopicFileName(key, fileName);
+    await prepareFileContent(key, file, fileName);
+  }
+}
+
+async function prepareFileContent(key:number, file:File, fileName: string)
+{
+  if (key > 0 && file && getKey("apiKey")!="")
+  {
+    const loader = new PDFLoader(file);
+    const winknlp = nlp(model);
+    var doc = await loader.load();
+    var pre3:string = "";
+    var pre2:string = "";
+    var pre1:string = "";
+    var text:string = "";
+    var post1:string = "";
+    var post2:string = "";
+    var post3:string = "";
+    //doc.forEach(async element => {
+      var element = doc.at(0);
+      const nlpdoc = winknlp.readDoc(element.pageContent.toString());
+      const items = nlpdoc.sentences();
+      var itemsLength = 100;
+      if (items.length() < itemsLength)
+      {
+        itemsLength = items.length();
+      }
+      for (let n = 0; n < itemsLength; n++){
+        pre3="";
+        pre2="";
+        pre1="";
+        post1="";
+        post2="";
+        post3="";
+        if (n > 2) {
+          pre3 = items.itemAt(n-3).out();
+        }
+        if (n > 1) {
+          pre2 = items.itemAt(n-2).out();
+        }
+        if (n > 0) {
+          pre1 = items.itemAt(n-1).out();
+        }
+        text = items.itemAt(n).out();
+        if (n < items.length()-1) {
+          post1 = items.itemAt(n+1).out();
+        }
+        if (n < items.length()-2) {
+          post2 = items.itemAt(n+2).out();
+        }
+        if (n < items.length()-3) {
+          post3 = items.itemAt(n+3).out();
+        }
+        await PrepareVector(vectorStore, text, fileName, key, pre1, pre2, pre3, post1, post2, post3);
+      };
+    //});
+  }
+}
+
+async function PrepareVector(vectorStore:VectorStorage, text:string, fileName:string,key: number, pre1:string, pre2:string, pre3:string, post1:string, post2:string, post3:string)
+{
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  await vectorStore.addText(text, {filename: fileName, key: key, pre1:pre1, pre2:pre2, pre3:pre3, post1:post1, post2:post2, post3:post3 });
+}
+
+export function saveFile(file: File, fileName: string)
 {
 
   let request: IDBOpenDBRequest = indexedDB.open("ra.files", 1);
@@ -126,12 +268,6 @@ export function SaveFile(file: File, fileName: string)
 
 function initKeys()
 {
-  var db = new loki('ra.db', 
-  { 
-    autoload: true,
-    autosave: true, 
-    autosaveInterval: 2000            }
-  );
   var keys = db.getCollection<KeyData>('keys');
   if (!keys)
   {
@@ -141,31 +277,37 @@ function initKeys()
       autoupdate: true
   });
   }
-  return db;
 }
 
 export function setKey(key:string, value:string) {
-  var keys = db_keys.getCollection<KeyData>('keys');
-  var data = keys.by('name', key);
-  if (data)
+  console.log("setKey:" + key + ":" + value);
+  var keys = db.getCollection<KeyData>('keys');
+  if (keys)
   {
-    data.value = value;
-    keys.update(data);
-  }
-  else
-  {
-    keys.insert( { name : key, value: value } );
+    var data = keys.by('name', key);
+    if (data)
+    {
+      data.value = value;
+      keys.update(data);
+    }
+    else
+    {
+      keys.insert( { name : key, value: value } );
+    }
   }
 }
 
 export function getKey(key:string) {
-  var keys = db_keys.getCollection<KeyData>('keys');
-  var data = keys.by('name', key);
-  if (data)
+  var keys = db.getCollection<KeyData>('keys');
+  if (keys)
   {
-      return data.value;
+    var data = keys.by('name', key);
+    if (data)
+    {
+        return data.value;
+    }
   }
-  return null;
+  return "";
 }
 
 export async function vectorTest()

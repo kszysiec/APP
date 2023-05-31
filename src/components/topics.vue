@@ -5,13 +5,29 @@
     export default {
     data: () => ({
       items: getAllTopics(),
-      selection: [getKey("currentTopic")]
+      selection: []
     }),
     methods: {
       async change(toggle: () => void) {
             toggle();
-            setKey("currentTopic",this.selection[0]);
+            if (this.items[this.selection].id)
+            {
+              setKey("currentTopic",this.items[this.selection].id);
+            }
       }
+    },
+    created: function() {
+       let key = getKey("currentTopic");
+       if (this.items)
+       {
+        for (let n = 0; n < this.items.length; n++){
+          if (this.items[n].id == key)
+            {
+              this.selection.push(n); 
+              return;
+            }
+        }
+       }
     }
   }
 
