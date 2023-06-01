@@ -24,10 +24,7 @@ type Store = IDBObjectStore;
 
 const queryLabelLength = 100;
 
-var db = initDB(); 
-
-initKeys();
-initTopics();
+var db:loki = null; 
 
 var vectorStore:VectorStorage = null;
 
@@ -39,22 +36,33 @@ export function getAllTopics() {
   return topics.find();
 }
 
-function initDB()
+export function initDB()
 {
-  var db = new loki('ra.db', 
-  { 
-    autoload: true,
-    autosave: true, 
-    autosaveInterval: 1000            
+  console.log("initDB");
+  if (db === null)
+  {
+    db = new loki('ra.db', 
+    { 
+      autoload: true,
+      autoloadCallback : databaseInitialize,
+      autosave: true, 
+      autosaveInterval: 1000            
+    }
+    );
   }
-  );
-  return db;
 }
+
+async function databaseInitialize() {
+  initTopics();
+  initKeys();
+  await wait(3000);
+} 
 
 function initTopics()
 {
+  console.log("initTopics");
   var topics = db.getCollection<TopicData>('topics');
-  if (!topics)
+  if (topics === null)
   {
       topics = db.addCollection<TopicData>('topics', {
       unique: <["id"]>["id"],
@@ -108,7 +116,7 @@ export function getCurrentTopicFiles() {
   return [];
 }
 
-export function getCurrentTopicQuery() {
+export async function getCurrentTopicQuery() {
   var currentId = getKey("currentTopic");
   console.log("getCurrentTopicQuery:"+currentId);
   if (currentId)
@@ -126,7 +134,7 @@ export function getCurrentTopicQuery() {
   return "brak bieżącego tematu";
 }
 
-export function getCurrentTopicTitle() {
+export async function getCurrentTopicTitle() {
   var currentId = getKey("currentTopic");
   console.log("getCurrentTopicTitle:"+currentId);
   if (currentId)
@@ -238,9 +246,14 @@ async function prepareFileContent(key:number, file:File, fileName: string)
   }
 }
 
+async function wait(ms:number)
+{
+  await new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function PrepareVector(vectorStore:VectorStorage, text:string, fileName:string,key: number, pre1:string, pre2:string, pre3:string, post1:string, post2:string, post3:string)
 {
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await wait(1000);
   await vectorStore.addText(text, {filename: fileName, key: key, pre1:pre1, pre2:pre2, pre3:pre3, post1:post1, post2:post2, post3:post3 });
 }
 
@@ -268,8 +281,9 @@ export function saveFile(file: File, fileName: string)
 
 function initKeys()
 {
+  console.log("initKeys");
   var keys = db.getCollection<KeyData>('keys');
-  if (!keys)
+  if (keys === null)
   {
     keys = db.addCollection<KeyData>('keys', {
       unique: <["name"]>["name"],
@@ -298,10 +312,14 @@ export function setKey(key:string, value:string) {
 }
 
 export function getKey(key:string) {
+  console.log("getKey:"+key);
+  initKeys();
   var keys = db.getCollection<KeyData>('keys');
   if (keys)
   {
+    console.log(keys);
     var data = keys.by('name', key);
+    console.log(data);
     if (data)
     {
         return data.value;

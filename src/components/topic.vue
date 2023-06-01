@@ -17,11 +17,22 @@
         currentTopicTitle:"brak bieżącego tematu",
         currentTopicQuery:"brak bieżącego tematu"
     }),
-    mounted() {
-        this.currentTopicTitle = getCurrentTopicTitle();
-        this.currentTopicQuery = getCurrentTopicQuery();
-    } 
+    async mounted() {
+        this.currentTopicTitle = await getCurrentTopicTitle();
+        this.currentTopicQuery = await getCurrentTopicQuery();
+    },
+    methods:
+    {
+      async onCloseClick(e) {
+        if (!e) {
+          return;
+        }
+        this.dialog_selection = false; 
+        this.currentTopicTitle = await getCurrentTopicTitle(); 
+        this.currentTopicQuery = await getCurrentTopicQuery();
+      }
     }
+     }
 </script>
 
 <template>
@@ -159,7 +170,7 @@
                     <v-btn
                         icon
                         dark
-                        @click="dialog_selection = false; this.currentTopicTitle = getCurrentTopicTitle();this.currentTopicQuery = getCurrentTopicQuery();"
+                        @click="onCloseClick"
                     >
                         <v-icon>mdi-close</v-icon>
                     </v-btn>

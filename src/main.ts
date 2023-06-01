@@ -15,9 +15,13 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { setupLayouts } from 'virtual:generated-layouts'
 import generatedRoutes from 'virtual:generated-pages'
 
+import { initDB } from '@/composables/db-repo'
+
 const routes = setupLayouts(generatedRoutes)
 const router = createRouter({ history: createWebHistory(), routes });
 //
+
+initDB()
 
 const vuetify = createVuetify({
     components,

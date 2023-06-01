@@ -6,8 +6,6 @@ export default {
     data: () => ({
       apiKey : getKey("apiKey")
     }),
-    created() {
-    },
     methods:
     {
       onClick(e) {

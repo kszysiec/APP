@@ -14,6 +14,7 @@ declare global {
   const getAllTopics: typeof import('./src/composables/db-repo')['getAllTopics']
   const getCurrentInstance: typeof import('vue')['getCurrentInstance']
   const getCurrentScope: typeof import('vue')['getCurrentScope']
+  const getCurrentTopicFiles: typeof import('./src/composables/db-repo')['getCurrentTopicFiles']
   const getCurrentTopicQuery: typeof import('./src/composables/db-repo')['getCurrentTopicQuery']
   const getCurrentTopicTitle: typeof import('./src/composables/db-repo')['getCurrentTopicTitle']
   const getKey: typeof import('./src/composables/db-repo')['getKey']
