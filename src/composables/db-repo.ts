@@ -19,6 +19,32 @@ class TopicData
   files: string[];
 }
 
+export class CardData
+{
+  id :string;
+  key : number;
+  score: number;
+  color: string;
+  pre2: string;
+  pre1: string;
+  text: string;
+  post1: string;
+  post2: string;
+  filename: string;
+}
+
+export class VectorMetaData
+{
+  filename: string;
+  key: number;
+  pre1: string; 
+  pre2: string;
+  pre3: string;
+  post1:string;
+  post2:string;
+  post3:string;
+}
+
 type DB = IDBDatabase;
 type Store = IDBObjectStore;
 
@@ -116,6 +142,25 @@ export function getCurrentTopicFiles() {
   return [];
 }
 
+export async function setCurrentTopicQuery(query:string) {
+  var currentId = getKey("currentTopic");
+  console.log("getCurrentTopicQuery:"+currentId);
+  if (currentId)
+  {
+    var topics = db.getCollection<TopicData>('topics');
+    if (topics)
+    {
+      var data = topics.by('id', currentId);
+      if (data)
+      {
+          data.query = query;
+          data.title = substringQuery(query);
+          topics.update(data);
+      }
+    }
+  }
+}
+
 export async function getCurrentTopicQuery() {
   var currentId = getKey("currentTopic");
   console.log("getCurrentTopicQuery:"+currentId);
@@ -180,7 +225,7 @@ export async function prepareNewTopicFile(key:number, file:File, fileName: strin
 {
   if (key > 0 && file && getKey("apiKey")!="")
   {
-    if (vectorStore==null)
+    if (vectorStore === null)
     {
       vectorStore = new VectorStorage({ openAIApiKey: getKey("apiKey") });
     }
@@ -328,14 +373,23 @@ export function getKey(key:string) {
   return "";
 }
 
-export async function vectorTest()
+export async function prepareResults()
 {
-  const vectorStore = new VectorStorage({ openAIApiKey: getKey("apiKey") });
-  await vectorStore.addText("Anielka jeszcze nie śpi", {additionalInfo: "zdanie1"});
-  await vectorStore.addText("Krzysiek jeszcze nie gotuje zup", {additionalInfo: "zdanie2"});
-  await vectorStore.addText("Mały Staś bawi się klockami", {additionalInfo: "zdanie3"});
-  const wynik = await vectorStore.similaritySearch({
-    query: "Babcia przygotowuje obiad",
+  if (vectorStore === null)
+  {
+      vectorStore = new VectorStorage({ openAIApiKey: getKey("apiKey") });
+  }
+  var paramK = getKey("paramK");
+  if (!paramK)
+  {
+    paramK = "8";
+  }
+  var queryContent = await getCurrentTopicQuery();
+  console.log("prepareResults for:"+queryContent);
+  const res = await vectorStore.similaritySearch({
+    query: queryContent,
+    k:Number.parseInt(paramK)
   });
-  console.log(wynik);
+  console.log(res);
+  return res;
 }

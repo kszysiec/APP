@@ -9,10 +9,10 @@
         density="compact"
       >
         <template v-slot:prepend>
-          <v-app-bar-nav-icon to="/"></v-app-bar-nav-icon>
+          <v-app-bar-nav-icon class="text-h4" icon="mdi-close" to="/"></v-app-bar-nav-icon>
         </template>
 
-        <v-app-bar-title>Opisane fragmenty</v-app-bar-title>
+        <v-app-bar-title class="text-h5">Opisane fragmenty</v-app-bar-title>
 
       </v-app-bar>
 

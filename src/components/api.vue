@@ -4,7 +4,9 @@ import { getKey, setKey } from '@/composables/db-repo'
 
 export default {
     data: () => ({
-      apiKey : getKey("apiKey")
+      apiKey : getKey("apiKey"),
+      paramK : getKey("paramK"),
+      successScore : getKey("successScore")
     }),
     methods:
     {
@@ -13,16 +15,58 @@ export default {
           return;
         }
         setKey("apiKey",this.apiKey);
+        setKey("paramK",this.paramK);
+        setKey("successScore",this.successScore);
       }
     }
     }
-
 </script>
 
 <template>
-      <v-textarea
+
+<v-card class="mx-auto">
+    <v-layout>
+
+      <v-app-bar
+        color="info"
+        :elevation="2"
+        density="compact"
+      >
+        <template v-slot:prepend>
+          <v-app-bar-nav-icon class="text-h4" icon="mdi-close" to="/"></v-app-bar-nav-icon>
+        </template>
+
+        <v-app-bar-title class="text-h5">Konfiguracja</v-app-bar-title>
+
+      </v-app-bar>
+
+      <v-main>  
+        <v-container fluid align="center">
+          <v-textarea
             v-model="apiKey"
             label="Wpisz API Key do wyszukiwania"
+            auto-grow
+            variant="outlined"
+            rows="1"
+            row-height="10"
+            shaped
+            class="text-h5"
+       ></v-textarea>
+
+       <v-textarea
+            v-model="paramK"
+            label="Wpisz ilość wyszukiwanych wyników"
+            auto-grow
+            variant="outlined"
+            rows="1"
+            row-height="10"
+            shaped
+            class="text-h5"
+       ></v-textarea>
+
+       <v-textarea
+            v-model="successScore"
+            label="Wpisz próg dla kategorii Pasuje!"
             auto-grow
             variant="outlined"
             rows="1"
@@ -41,4 +85,10 @@ export default {
            >
             Zapisz
        </v-btn>
+    
+       </v-container>
+      </v-main>
+    </v-layout>
+</v-card>
+
 </template>

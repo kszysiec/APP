@@ -8,10 +8,10 @@
         density="compact"
       >
         <template v-slot:prepend>
-          <v-app-bar-nav-icon to="/"></v-app-bar-nav-icon>
+          <v-app-bar-nav-icon class="text-h5" icon="mdi-account-key" to="/account"></v-app-bar-nav-icon>
         </template>
 
-        <v-app-bar-title>Research Assistant</v-app-bar-title>
+        <v-app-bar-title class="text-h5">Research Assistant</v-app-bar-title>
 
       </v-app-bar>
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { getCurrentTopicTitle, getCurrentTopicQuery, getKey } from '@/composables/db-repo'
+    import { getCurrentTopicTitle, getCurrentTopicQuery, getKey, setCurrentTopicQuery } from '@/composables/db-repo'
     import logo from "../assets/bg.png"
 </script>
 
@@ -30,9 +30,15 @@
         this.dialog_selection = false; 
         this.currentTopicTitle = await getCurrentTopicTitle(); 
         this.currentTopicQuery = await getCurrentTopicQuery();
+      },
+      onClick(e) {
+        if (!e) {
+          return;
+        }
+        setCurrentTopicQuery(this.currentTopicQuery);
       }
     }
-     }
+    }
 </script>
 
 <template>
@@ -78,14 +84,14 @@
                     dark
                     color="info"
                     >
-                    <v-toolbar-title>Szczegóły bieżącego tematu</v-toolbar-title>
+                    <v-toolbar-title class="text-h5">Szczegóły bieżącego tematu</v-toolbar-title>
                     <v-spacer></v-spacer>
                     <v-btn
                         icon
                         dark
                         @click="dialog_details = false"
                     >
-                        <v-icon>mdi-close</v-icon>
+                        <v-icon class="text-h3">mdi-close</v-icon>
                     </v-btn>
                     </v-toolbar>
 
@@ -107,7 +113,26 @@
                         <v-banner-text class="text-h5">
                             <div class="text-h4 mb-5">Jakich treści szukamy w danym temacie ?</div>  
                             <v-divider></v-divider>
-                            <div class="text-h5 ma-5">{{ this.currentTopicQuery }}</div>
+                            <v-textarea
+                                v-model="currentTopicQuery"
+                                label="Możesz zmienić treść i zapisać"
+                                auto-grow
+                                variant="outlined"
+                                rows="1"
+                                row-height="10"
+                                shaped
+                                class="text-h5"
+                            ></v-textarea>
+                            <v-btn
+                                color="indigo"
+                                variant="elevated"
+                                size="x-large"
+                                rounded="lg"
+                                class="text-none"
+                                @click="onClick"
+                            >
+                                Zapisz
+                            </v-btn>
                         </v-banner-text>
                         <template v-slot:prepend>
                             <v-icon size="80" icon="mdi-message-text-outline" color="success"></v-icon>
@@ -165,14 +190,14 @@
                     dark
                     color="info"
                     >
-                    <v-toolbar-title>Możesz tutaj zmienić temat którym się aktualnie zajmujesz</v-toolbar-title>
+                    <v-toolbar-title class="text-h5">Możesz tutaj zmienić temat którym się aktualnie zajmujesz</v-toolbar-title>
                     <v-spacer></v-spacer>
                     <v-btn
                         icon
                         dark
                         @click="onCloseClick"
                     >
-                        <v-icon>mdi-close</v-icon>
+                        <v-icon class="text-h3">mdi-close</v-icon>
                     </v-btn>
                     </v-toolbar>
 
@@ -212,14 +237,14 @@
                     dark
                     color="info"
                     >
-                    <v-toolbar-title>Możesz tutaj dodać nowy temat którym się aktualnie zajmujesz</v-toolbar-title>
+                    <v-toolbar-title class="text-h5">Możesz tutaj dodać nowy temat którym się aktualnie zajmujesz</v-toolbar-title>
                     <v-spacer></v-spacer>
                     <v-btn
                         icon
                         dark
                         @click="dialog_new = false"
                     >
-                        <v-icon>mdi-close</v-icon>
+                        <v-icon class="text-h3">mdi-close</v-icon>
                     </v-btn>
                     </v-toolbar>
 

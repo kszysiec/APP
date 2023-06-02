@@ -53,11 +53,7 @@
         :elevation="2"
         density="compact"
       >
-        <template v-slot:prepend>
-          <v-app-bar-nav-icon to="/"></v-app-bar-nav-icon>
-        </template>
-
-        <v-app-bar-title>Zacznij szukać nowego tematu</v-app-bar-title>
+        <v-app-bar-title class="text-h5">Zacznij szukać nowego tematu</v-app-bar-title>
 
       </v-app-bar>
 
