@@ -6,6 +6,7 @@ import pages from 'vite-plugin-pages';
 import layouts from 'vite-plugin-vue-layouts';
 import components from 'unplugin-vue-components/vite'
 import autoImport from 'unplugin-auto-import/vite'
+import wasm from 'vite-plugin-wasm'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -15,6 +16,7 @@ export default defineConfig({
     },
   }, 
   plugins: [
+    wasm(),
     vue({
       template: {
         compilerOptions: {
