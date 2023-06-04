@@ -53,6 +53,7 @@ declare global {
   const ref: typeof import('vue')['ref']
   const resolveComponent: typeof import('vue')['resolveComponent']
   const saveFile: typeof import('./src/composables/db-repo')['saveFile']
+  const setCurrentTopicQuery: typeof import('./src/composables/db-repo')['setCurrentTopicQuery']
   const setKey: typeof import('./src/composables/db-repo')['setKey']
   const shallowReactive: typeof import('vue')['shallowReactive']
   const shallowReadonly: typeof import('vue')['shallowReadonly']

@@ -73,7 +73,7 @@
                         size="x-large"
                         rounded="lg"
                         class="text-none"
-                        v-if="getKey('currentTopic')"
+                        v-if="getKey('currentTopic',null)"
                         >
                         Bieżący temat
                         </v-btn>
@@ -179,7 +179,7 @@
                         size="x-large"
                         rounded="lg"
                         class="text-none"
-                        v-if="getKey('currentTopic')"
+                        v-if="getKey('currentTopic',null)"
                         >
                         Zmień temat
                     </v-btn>

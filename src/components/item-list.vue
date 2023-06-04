@@ -39,29 +39,36 @@ async mounted() {
   var counter = 1;
   results.forEach(element => {
     let meta = element.metadata as VectorMetaData;
-    let successScore = getKey("successScore");
-    if (!successScore)
-    {
-      successScore = "0.85";
-    }
+    let successScore = getKey("successScore","0.85");
+    let orangeScore = getKey("orangeScore","0.80");
+    let blueScore = getKey("blueScore","0.70");
+    let greyScore = getKey("greyScore","0.60");
     let colorName = "success";
     if (element.score < Number.parseFloat(successScore))
     {
       colorName = "orange-darken-1";
     }
-    this.visibleCards.push({id: counter.toString(), filename : meta.filename, key : meta.key, score : element.score, color : colorName, pre2 : meta.pre2, pre1: meta.pre1, text : element.text, post1: meta.post1, post2 : meta.post2} as CardData);
-    counter++;
+    if (element.score < Number.parseFloat(orangeScore))
+    {
+      colorName = "blue";
+    }
+    if (element.score < Number.parseFloat(blueScore))
+    {
+      colorName = "grey";
+    }
+    if (element.score > Number.parseFloat(greyScore))
+    {
+        this.visibleCards.push({id: counter.toString(), filename : meta.filename, key : meta.key, score : element.score, color : colorName, pre2 : meta.pre2, pre1: meta.pre1, text : element.text, post1: meta.post1, post2 : meta.post2} as CardData);
+        counter++;
+    }
   });
 },
 methods: {
   handleCardAccepted() {
-    console.log("handleCardAccepted");
   },
   handleCardRejected() {
-    console.log("handleCardRejected");
   },
   handleCardSkipped() {
-    console.log("handleCardSkipped");
   },
   removeCardFromDeck() {
     this.visibleCards.shift();

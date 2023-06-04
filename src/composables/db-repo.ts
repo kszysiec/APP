@@ -62,9 +62,19 @@ export function getAllTopics() {
   return topics.find();
 }
 
+function consoleLog(msg:string)
+{
+  console.log(msg);
+}
+
+function consoleAnyLog(obj)
+{
+  console.log(obj);
+}
+
 export function initDB()
 {
-  console.log("initDB");
+  consoleLog("initDB");
   if (db === null)
   {
     db = new loki('ra.db', 
@@ -86,7 +96,7 @@ async function databaseInitialize() {
 
 function initTopics()
 {
-  console.log("initTopics");
+  consoleLog("initTopics");
   var topics = db.getCollection<TopicData>('topics');
   if (topics === null)
   {
@@ -125,8 +135,8 @@ function setTopicFileName(key:number, fileName:string) {
 }
 
 export function getCurrentTopicFiles() {
-  var currentId = getKey("currentTopic");
-  console.log("getCurrentTopicFiles:"+currentId);
+  var currentId = getKey("currentTopic",null);
+  consoleLog("getCurrentTopicFiles:"+currentId);
   if (currentId)
   {
     var topics = db.getCollection<TopicData>('topics');
@@ -143,8 +153,8 @@ export function getCurrentTopicFiles() {
 }
 
 export async function setCurrentTopicQuery(query:string) {
-  var currentId = getKey("currentTopic");
-  console.log("getCurrentTopicQuery:"+currentId);
+  var currentId = getKey("currentTopic",null);
+  consoleLog("setCurrentTopicQuery:"+query);
   if (currentId)
   {
     var topics = db.getCollection<TopicData>('topics');
@@ -162,8 +172,8 @@ export async function setCurrentTopicQuery(query:string) {
 }
 
 export async function getCurrentTopicQuery() {
-  var currentId = getKey("currentTopic");
-  console.log("getCurrentTopicQuery:"+currentId);
+  var currentId = getKey("currentTopic",null);
+  consoleLog("getCurrentTopicQuery:"+currentId);
   if (currentId)
   {
     var topics = db.getCollection<TopicData>('topics');
@@ -180,8 +190,8 @@ export async function getCurrentTopicQuery() {
 }
 
 export async function getCurrentTopicTitle() {
-  var currentId = getKey("currentTopic");
-  console.log("getCurrentTopicTitle:"+currentId);
+  var currentId = getKey("currentTopic",null);
+  consoleLog("getCurrentTopicTitle:"+currentId);
   if (currentId)
   {
     var topics = db.getCollection<TopicData>('topics');
@@ -211,9 +221,9 @@ function substringQuery(query:string)
 
 export async function prepareNewTopic(searchText:string)
 {
-  if (searchText && searchText!="" && getKey("apiKey")!="")
+  if (searchText && searchText!="" && getKey("apiKey","")!="")
   {
-    console.log("prepareNewTopic:"+searchText);
+    consoleLog("prepareNewTopic:"+searchText);
     var key = setTopicQuery(searchText);
     setKey("currentTopic", key.toString());
     return key;
@@ -223,13 +233,13 @@ export async function prepareNewTopic(searchText:string)
 
 export async function prepareNewTopicFile(key:number, file:File, fileName: string)
 {
-  if (key > 0 && file && getKey("apiKey")!="")
+  if (key > 0 && file && getKey("apiKey","")!="")
   {
+    consoleLog("prepareNewTopicFile:"+fileName);
     if (vectorStore === null)
     {
-      vectorStore = new VectorStorage({ openAIApiKey: getKey("apiKey") });
+        vectorStore = new VectorStorage({ openAIApiKey: getKey("apiKey",""), openaiModel: getKey("apiModel","text-embedding-ada-002") });
     }
-    console.log("prepareNewTopicFile:"+fileName);
     saveFile(file, fileName);
     setTopicFileName(key, fileName);
     await prepareFileContent(key, file, fileName);
@@ -238,7 +248,7 @@ export async function prepareNewTopicFile(key:number, file:File, fileName: strin
 
 async function prepareFileContent(key:number, file:File, fileName: string)
 {
-  if (key > 0 && file && getKey("apiKey")!="")
+  if (key > 0 && file && getKey("apiKey","")!="")
   {
     const loader = new PDFLoader(file);
     const winknlp = nlp(model);
@@ -250,8 +260,10 @@ async function prepareFileContent(key:number, file:File, fileName: string)
     var post1:string = "";
     var post2:string = "";
     var post3:string = "";
-    //doc.forEach(async element => {
-      var element = doc.at(0);
+    var pagesCount = 0;
+    var apiPages = getKey("apiPages","1");
+    
+    doc.forEach(async element => {
       const nlpdoc = winknlp.readDoc(element.pageContent.toString());
       const items = nlpdoc.sentences();
       var itemsLength = 100;
@@ -287,7 +299,12 @@ async function prepareFileContent(key:number, file:File, fileName: string)
         }
         await PrepareVector(vectorStore, text, fileName, key, pre1, pre2, pre3, post1, post2, post3);
       };
-    //});
+      pagesCount++;
+      if (pagesCount === Number.parseInt(apiPages))
+      {
+        return;
+      }
+    });
   }
 }
 
@@ -298,7 +315,8 @@ async function wait(ms:number)
 
 async function PrepareVector(vectorStore:VectorStorage, text:string, fileName:string,key: number, pre1:string, pre2:string, pre3:string, post1:string, post2:string, post3:string)
 {
-  await wait(1000);
+  var apiTimeout = getKey("apiTimeout","1000");
+  await wait(Number.parseInt(apiTimeout));
   await vectorStore.addText(text, {filename: fileName, key: key, pre1:pre1, pre2:pre2, pre3:pre3, post1:post1, post2:post2, post3:post3 });
 }
 
@@ -326,7 +344,7 @@ export function saveFile(file: File, fileName: string)
 
 function initKeys()
 {
-  console.log("initKeys");
+  consoleLog("initKeys");
   var keys = db.getCollection<KeyData>('keys');
   if (keys === null)
   {
@@ -339,7 +357,7 @@ function initKeys()
 }
 
 export function setKey(key:string, value:string) {
-  console.log("setKey:" + key + ":" + value);
+  consoleLog("setKey:" + key + ":" + value);
   var keys = db.getCollection<KeyData>('keys');
   if (keys)
   {
@@ -356,40 +374,41 @@ export function setKey(key:string, value:string) {
   }
 }
 
-export function getKey(key:string) {
-  console.log("getKey:"+key);
+export function getKey(key:string,defaultVal:string) {
+  consoleLog("getKey:"+key+":"+defaultVal);
   initKeys();
   var keys = db.getCollection<KeyData>('keys');
   if (keys)
   {
-    console.log(keys);
     var data = keys.by('name', key);
-    console.log(data);
     if (data)
     {
+      if (!data.value || data.value==="")
+      {
+        return defaultVal;
+      }
+      else
+      {
         return data.value;
+      }
     }
   }
-  return "";
+  return defaultVal;
 }
 
 export async function prepareResults()
 {
   if (vectorStore === null)
   {
-      vectorStore = new VectorStorage({ openAIApiKey: getKey("apiKey") });
+      vectorStore = new VectorStorage({ openAIApiKey: getKey("apiKey",""), openaiModel: getKey("apiModel","text-embedding-ada-002") });
   }
-  var paramK = getKey("paramK");
-  if (!paramK)
-  {
-    paramK = "8";
-  }
+  var paramK = getKey("paramK","8");
   var queryContent = await getCurrentTopicQuery();
-  console.log("prepareResults for:"+queryContent);
+  consoleLog("prepareResults for:"+queryContent);
   const res = await vectorStore.similaritySearch({
     query: queryContent,
     k:Number.parseInt(paramK)
   });
-  console.log(res);
+  consoleAnyLog(res);
   return res;
 }

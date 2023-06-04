@@ -17,7 +17,7 @@
       }
     },
     created: function() {
-       let key = getKey("currentTopic");
+       let key = getKey("currentTopic",null);
        if (this.items)
        {
         for (let n = 0; n < this.items.length; n++){
