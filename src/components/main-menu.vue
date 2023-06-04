@@ -8,10 +8,10 @@
         density="compact"
       >
         <template v-slot:prepend>
-          <v-app-bar-nav-icon to="/"></v-app-bar-nav-icon>
+          <v-app-bar-nav-icon class="text-h5" icon="mdi-account-key" to="/account"></v-app-bar-nav-icon>
         </template>
 
-        <v-app-bar-title>Research Assistant</v-app-bar-title>
+        <v-app-bar-title class="text-h5">Research Assistant</v-app-bar-title>
 
       </v-app-bar>
 
@@ -29,7 +29,7 @@
             <menu-block 
               color="blue"
               title="Pasujące fragmenty" 
-              text="Kolejno przeglądamy odszukane pasujące fragmenty dla aktualnego tematu" 
+              text="Kolejno przeglądamy pasujące fragmenty dla aktualnego tematu" 
               action="Przeglądaj" 
               image="mdi-shuffle" 
               actionTo="/items"
@@ -39,23 +39,10 @@
             <menu-block 
               color="orange-darken-1"
               title="Opisane fragmenty" 
-              text="Przeglądamy wszystkie listy odszukanych i wybranych fragmentów dla aktualnego tematu" 
+              text="Przeglądamy wszystkie listy wybranych fragmentów dla aktualnego tematu" 
               action="Analizuj" 
               image="mdi-checkbox-multiple-marked-outline" 
               actionTo="/results"
-            />
-          </v-col>
-        </v-row>  
-
-        <v-row>
-          <v-col>
-            <menu-block 
-              color="grey"
-              title="Tryb rozmowy" 
-              text="Wykorzystaj tryb rozmowy na temat szczegółów załączonego dokumentu" 
-              action="Rozmawiaj" 
-              image="mdi-comment-multiple-outline" 
-              actionTo="/chat"
             />
           </v-col>
           <v-col>
@@ -70,7 +57,7 @@
           </v-col>
         </v-row>  
 
-      </v-container>
+       </v-container>
       </v-main>
     </v-layout>
   </v-card>

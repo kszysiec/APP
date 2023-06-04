@@ -1,5 +1,44 @@
 <script setup lang="ts">
-    import logo from "../assets/btn-logo.png"
+    import { getCurrentTopicTitle, getCurrentTopicQuery, getKey, setCurrentTopicQuery } from '@/composables/db-repo'
+    import logo from "../assets/bg.png"
+</script>
+
+<script lang="ts">
+    import StartForm from './start-form.vue'
+    import FilesList from './files-list.vue'
+
+    export default {
+    components: { StartForm, FilesList },
+    data: () => ({
+        show: false,
+        dialog_details: false,
+        dialog_selection: false,
+        dialog_new: false,
+        currentTopicTitle:"brak bieżącego tematu",
+        currentTopicQuery:"brak bieżącego tematu"
+    }),
+    async mounted() {
+        this.currentTopicTitle = await getCurrentTopicTitle();
+        this.currentTopicQuery = await getCurrentTopicQuery();
+    },
+    methods:
+    {
+      async onCloseClick(e) {
+        if (!e) {
+          return;
+        }
+        this.dialog_selection = false; 
+        this.currentTopicTitle = await getCurrentTopicTitle(); 
+        this.currentTopicQuery = await getCurrentTopicQuery();
+      },
+      onClick(e) {
+        if (!e) {
+          return;
+        }
+        setCurrentTopicQuery(this.currentTopicQuery);
+      }
+    }
+    }
 </script>
 
 <template>
@@ -10,8 +49,8 @@
         cover
       ></v-img>
   
-      <v-card-title  class="text-h5">
-        Tekst wyszukiwany dla aktualnego tematu, może składać się z wielu zdań i zajmować nawet kilka linijek, tutaj jednak będzie skrócony
+      <v-card-title class="text-h5">
+        {{ this.currentTopicTitle }}
       </v-card-title>
   
       <v-card-subtitle>
@@ -34,6 +73,7 @@
                         size="x-large"
                         rounded="lg"
                         class="text-none"
+                        v-if="getKey('currentTopic',null)"
                         >
                         Bieżący temat
                         </v-btn>
@@ -44,14 +84,14 @@
                     dark
                     color="info"
                     >
-                    <v-toolbar-title>Szczegóły bieżącego tematu</v-toolbar-title>
+                    <v-toolbar-title class="text-h5">Szczegóły bieżącego tematu</v-toolbar-title>
                     <v-spacer></v-spacer>
                     <v-btn
                         icon
                         dark
                         @click="dialog_details = false"
                     >
-                        <v-icon>mdi-close</v-icon>
+                        <v-icon class="text-h3">mdi-close</v-icon>
                     </v-btn>
                     </v-toolbar>
 
@@ -73,7 +113,26 @@
                         <v-banner-text class="text-h5">
                             <div class="text-h4 mb-5">Jakich treści szukamy w danym temacie ?</div>  
                             <v-divider></v-divider>
-                            <div class="text-h5 ma-5">Tutaj jest treść wyszukiwana dla aktualnego tematu, może składać się z wielu zdań i zajmować nawet kilka linijek</div>
+                            <v-textarea
+                                v-model="currentTopicQuery"
+                                label="Możesz zmienić treść i zapisać"
+                                auto-grow
+                                variant="outlined"
+                                rows="1"
+                                row-height="10"
+                                shaped
+                                class="text-h5"
+                            ></v-textarea>
+                            <v-btn
+                                color="indigo"
+                                variant="elevated"
+                                size="x-large"
+                                rounded="lg"
+                                class="text-none"
+                                @click="onClick"
+                            >
+                                Zapisz
+                            </v-btn>
                         </v-banner-text>
                         <template v-slot:prepend>
                             <v-icon size="80" icon="mdi-message-text-outline" color="success"></v-icon>
@@ -120,9 +179,10 @@
                         size="x-large"
                         rounded="lg"
                         class="text-none"
+                        v-if="getKey('currentTopic',null)"
                         >
                         Zmień temat
-                        </v-btn>
+                    </v-btn>
                 </template>
 
                 <v-card class="mx-auto">
@@ -130,14 +190,14 @@
                     dark
                     color="info"
                     >
-                    <v-toolbar-title>Możesz tutaj zmienić temat którym się aktualnie zajmujesz</v-toolbar-title>
+                    <v-toolbar-title class="text-h5">Możesz tutaj zmienić temat którym się aktualnie zajmujesz</v-toolbar-title>
                     <v-spacer></v-spacer>
                     <v-btn
                         icon
                         dark
-                        @click="dialog_selection = false"
+                        @click="onCloseClick"
                     >
-                        <v-icon>mdi-close</v-icon>
+                        <v-icon class="text-h3">mdi-close</v-icon>
                     </v-btn>
                     </v-toolbar>
 
@@ -177,14 +237,14 @@
                     dark
                     color="info"
                     >
-                    <v-toolbar-title>Możesz tutaj dodać nowy temat którym się aktualnie zajmujesz</v-toolbar-title>
+                    <v-toolbar-title class="text-h5">Możesz tutaj dodać nowy temat którym się aktualnie zajmujesz</v-toolbar-title>
                     <v-spacer></v-spacer>
                     <v-btn
                         icon
                         dark
                         @click="dialog_new = false"
                     >
-                        <v-icon>mdi-close</v-icon>
+                        <v-icon class="text-h3">mdi-close</v-icon>
                     </v-btn>
                     </v-toolbar>
 
@@ -213,29 +273,13 @@
         <div v-show="show">
           <v-divider></v-divider>
             <v-card-text>
-                Tekst wyszukiwany dla aktualnego tematu, może składać się z wielu zdań i zajmować nawet kilka linijek, tutaj jednak nie będzie skrócony jak w nagłówku, będzie pokazana cała treść
+                {{ this.currentTopicQuery }}
             </v-card-text>
         </div>
       </v-expand-transition>
 
     </v-card>
-  </template>
-
-<script lang="ts">
-
-import StartForm from './start-form.vue'
-import FilesList from './files-list.vue'
-
-export default {
-    components: { StartForm, FilesList },
-    data: () => ({
-        show: false,
-        dialog_details: false,
-        dialog_selection: false,
-        dialog_new: false
-    }),
-}
-</script>
+</template>
 
 <style>
 .dialog-bottom-transition-enter-active,

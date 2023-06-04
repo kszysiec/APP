@@ -2,8 +2,16 @@
   <div class="cards">
     <card
       v-for="(card, index) in cards"
-      :key="card"
-      :card="card"
+      :key="card.id"
+      :id="card.key"
+      :color="card.color"
+      :filename="card.filename"
+      :score="card.score"
+      :text="card.text"
+      :pre1="card.pre1"
+      :pre2="card.pre2"
+      :post1="card.post1"
+      :post2="card.post2"
       :is-current="index === 0"
       @cardAccepted="$emit('cardAccepted');"
       @cardRejected="$emit('cardRejected');"
@@ -13,12 +21,15 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+    import { CardData } from '@/composables/db-repo'
+</script>
 
+<script lang="ts">
 export default {
   props: {
     cards: {
-      type: Array<string>,
+      type: Array<CardData>,
       required: true
     }
   }

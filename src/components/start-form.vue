@@ -1,11 +1,46 @@
 <script lang="ts">
+
+  import { prepareNewTopic, prepareNewTopicFile } from '@/composables/db-repo'
+
   export default {
     data: () => ({
       step: 1,
-      progress : 34
+      progress : 0,
+      searchText : "",
+      pdfFiles : null,
+      key:0
     }),
     created() {
       this.step = 1
+    },
+    methods:
+    {
+      onFileChange(e) {
+        if (!e) {
+          return;
+        }
+        this.pdfFiles = e.target.files;
+      }
+    },
+    watch: {
+    step: async function(val) { 
+        if (val == 3)
+        {
+          if (this.searchText && this.searchText!="")
+          {
+            this.key = await prepareNewTopic(this.searchText);
+            this.progress = 10;
+            if (this.pdfFiles)
+            {
+              for (const file of this.pdfFiles) {
+                await prepareNewTopicFile(this.key, file, file.name);
+                this.progress = this.progress+(90/(this.pdfFiles.length));
+              }
+            }
+            this.progress = 100;
+          }
+        }
+      }
     }
   }
 </script>
@@ -18,11 +53,7 @@
         :elevation="2"
         density="compact"
       >
-        <template v-slot:prepend>
-          <v-app-bar-nav-icon to="/"></v-app-bar-nav-icon>
-        </template>
-
-        <v-app-bar-title>Zacznij szukać nowego tematu</v-app-bar-title>
+        <v-app-bar-title class="text-h5">Zacznij szukać nowego tematu</v-app-bar-title>
 
       </v-app-bar>
 
@@ -40,6 +71,7 @@
                   counter
                   chips
                   class="mb-2 text-h5"
+                  @change="onFileChange"
                 ></v-file-input>
                 <span class="text-grey-darken-1 text-h5">
                   Wskaż pliki, które chcesz przeszukiwać
@@ -50,6 +82,7 @@
             <v-window-item :value="2">
               <v-card-text>
                 <v-textarea
+                    v-model="searchText"
                     label="Wpisz treść do wyszukiwania"
                     auto-grow
                     variant="outlined"
@@ -82,9 +115,8 @@
                       v-model="progress"
                       color="blue-grey"
                       rounded
-                      indeterminate
                       height="25"
-                    ><strong>34%</strong></v-progress-linear>
+                    ><strong>{{ Math.ceil(progress) }}%</strong></v-progress-linear>
                   </v-col>
                 </v-row>
                 <span class="text-caption text-grey text-h5">Kiedy zakończy się przetwarzanie możesz przejść do przeglądania tego co udało się już znaleźć</span>
@@ -129,7 +161,7 @@
             Kolejny krok
           </v-btn>
           <v-btn
-            v-if="step >= 3"
+            v-if="step >= 3 && progress==100"
             size="x-large" color="green-lighten-1" variant="elevated"
             @click="step=0"
           >
