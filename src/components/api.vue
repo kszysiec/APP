@@ -4,6 +4,7 @@ import { getKey, setKey } from '@/composables/db-repo'
 
 export default {
     data: () => ({
+      accessKey : getKey("accessKey",""),
       apiKey : getKey("apiKey",""),
       apiModel : getKey("apiModel","text-embedding-ada-002"),
       paramK : getKey("paramK","8"),
@@ -11,7 +12,7 @@ export default {
       orangeScore : getKey("orangeScore","0.80"),
       blueScore : getKey("blueScore","0.70"),
       greyScore : getKey("greyScore","0.60"),
-      apiTimeout : getKey("apiTimeout","1000"),
+      apiTimeout : getKey("apiTimeout","20000"),
       apiPages : getKey("apiPages","1")
     }),
     methods:
@@ -21,6 +22,7 @@ export default {
           return;
         }
         setKey("apiKey",this.apiKey);
+        setKey("accessKey",this.accessKey);
         setKey("apiModel",this.apiModel);
         setKey("paramK",this.paramK);
         setKey("successScore",this.successScore);
@@ -54,6 +56,17 @@ export default {
 
       <v-main>  
         <v-container fluid align="center">
+          <v-textarea
+            v-model="accessKey"
+            label="Wpisz klucz dostępowy"
+            auto-grow
+            variant="outlined"
+            rows="1"
+            row-height="10"
+            shaped
+            class="text-h5"
+       ></v-textarea>
+
           <v-textarea
             v-model="apiKey"
             label="Wpisz klucz API do wyszukiwania"

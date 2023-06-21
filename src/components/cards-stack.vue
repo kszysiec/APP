@@ -12,7 +12,7 @@
       :pre2="card.pre2"
       :post1="card.post1"
       :post2="card.post2"
-      :is-current="index === 0"
+      :is-current="index == 0"
       @cardAccepted="$emit('cardAccepted');"
       @cardRejected="$emit('cardRejected');"
       @cardSkipped="$emit('cardSkipped');"

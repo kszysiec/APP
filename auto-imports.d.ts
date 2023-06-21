@@ -7,6 +7,7 @@ declare global {
   const CardData: typeof import('./src/composables/db-repo')['CardData']
   const EffectScope: typeof import('vue')['EffectScope']
   const VectorMetaData: typeof import('./src/composables/db-repo')['VectorMetaData']
+  const canUsingThisApp: typeof import('./src/composables/db-repo')['canUsingThisApp']
   const computed: typeof import('vue')['computed']
   const createApp: typeof import('vue')['createApp']
   const customRef: typeof import('vue')['customRef']

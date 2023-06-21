@@ -1,3 +1,20 @@
+<script lang="ts">
+
+import { canUsingThisApp } from '@/composables/db-repo'
+
+export default {
+data() {
+  return {
+    visibleApp: false
+  };
+},
+async mounted() {
+  this.visibleApp = canUsingThisApp();
+}
+};
+
+</script>
+
 <template>
 
   <v-card class="mx-auto">
@@ -11,12 +28,12 @@
           <v-app-bar-nav-icon class="text-h5" icon="mdi-account-key" to="/account"></v-app-bar-nav-icon>
         </template>
 
-        <v-app-bar-title class="text-h5">Research Assistant</v-app-bar-title>
+        <v-app-bar-title class="text-h5">Dr Paper</v-app-bar-title>
 
       </v-app-bar>
 
       <v-main>
-        <v-container fluid align="center">
+        <v-container fluid align="center" v-if="visibleApp">
 
         <v-row>
           <v-col>
