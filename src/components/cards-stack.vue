@@ -6,6 +6,7 @@
       :id="card.key"
       :color="card.color"
       :filename="card.filename"
+      :page="card.page"
       :score="card.score"
       :text="card.text"
       :pre1="card.pre1"

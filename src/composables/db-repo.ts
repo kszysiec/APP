@@ -1,10 +1,12 @@
 import loki from "lokijs";
-import { VectorStorage } from "vector-storage";
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
+import { OpenAI } from "langchain/llms/openai";
 import { Buffer } from "buffer";
 import { PDFJS } from "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js";
-import nlp, { WinkMethods } from "wink-nlp";
+import nlp from "wink-nlp";
 import model from "wink-eng-lite-web-model";
+import similarity from "wink-nlp/utilities/similarity";
+import {Bow} from "wink-nlp";
 
 class KeyData {
   name: string;
@@ -31,18 +33,32 @@ export class CardData
   post1: string;
   post2: string;
   filename: string;
+  page : number;
 }
 
 export class VectorMetaData
 {
+  id :string;
   filename: string;
   key: number;
   pre1: string; 
   pre2: string;
   pre3: string;
+  text: string;
   post1:string;
   post2:string;
   post3:string;
+  page: number;
+  score: number;
+}
+
+export class PageMetaData
+{
+  id :string;
+  filename: string;
+  key: number;
+  text: string;
+  page: number;
 }
 
 type DB = IDBDatabase;
@@ -52,18 +68,13 @@ const queryLabelLength = 100;
 
 var db:loki = null; 
 
-var vectorStore:VectorStorage = null;
-
 var keys_collection_name = "keys.v2.0.0";
 var topics_collection_name = "topics.v2.0.0";
+var vectors_collection_name = "vectors.v2.0.0";
+var pages_collection_name = "pages.v2.0.0";
 
 PDFJS.workerSrc = "pdf.worker.js";
 globalThis.Buffer = Buffer;
-
-export function getAllTopics() {
-  var topics = db.getCollection<TopicData>(topics_collection_name);
-  return topics.find();
-}
 
 function consoleLog(msg:string)
 {
@@ -75,7 +86,39 @@ function consoleAnyLog(obj)
   console.log(obj);
 }
 
-export function initDB()
+export function callChatGPT()
+{
+/*
+  let winknlp = nlp(model);
+  const doc1 = winknlp.readDoc("Two endocannabinoid receptors are known: CB1R, which is widely expressed in the brain, with lower levels observed in the peripheral circulation, and CB2R, which is mostly expressed in the peripheral circulation, predominantly in immune-related organs and cells.");
+  const doc2 = winknlp.readDoc("Two endocannabinoid receptors are known: CB1R, which is widely\nexpressed in the brain, with lower levels observed in the peripheral\ncirculation, and CB2R, which is mostly expressed in the peripheral\ncirculation, predominantly in immune-related organs and cells.");
+  const docX = winknlp.readDoc("In the brain, CB1Rs are widespread in the     hippocampus, cerebellum, cerebral cortex, basal ganglia, amyglada and     sensory motor sectors of the striatum; however, they are sparsely distributed     in the brainstem, diencephalon and spinal cord (Herkenham     et al., 1991; Glass et al., 1997; Van Waes et al., 2012; Chevaleyre et al.,     2006).");
+  const docPage = winknlp.readDoc(pageText);
+  const set1 = doc1.tokens().out(winknlp.its.value, winknlp.as.set);
+  const set2 = doc2.tokens().out(winknlp.its.value, winknlp.as.set);
+  const setX = docX.tokens().out(winknlp.its.value, winknlp.as.set);
+  const bow1 = doc1.tokens().out(winknlp.its.value, winknlp.as.bow);
+  const bow2 = doc2.tokens().out(winknlp.its.value, winknlp.as.bow);
+  const bow3 = docPage.tokens().out(winknlp.its.value, winknlp.as.bow);
+  const bowX = docX.tokens().out(winknlp.its.value, winknlp.as.bow);
+  consoleAnyLog(similarity.set.oo(set1 as Set<string>, set2 as Set<string>));
+  consoleAnyLog(similarity.set.oo(set1 as Set<string>, setX as Set<string>));
+  consoleAnyLog(similarity.set.oo(set2 as Set<string>, setX as Set<string>));
+  consoleAnyLog(similarity.bow.cosine(bow1 as Bow, bow2 as Bow));
+  consoleAnyLog(similarity.bow.cosine(bow1 as Bow, bow3 as Bow));
+  consoleAnyLog(similarity.bow.cosine(bow2 as Bow, bow3 as Bow));
+  consoleAnyLog(similarity.bow.cosine(bow1 as Bow, bowX as Bow));
+  consoleAnyLog(similarity.bow.cosine(bow2 as Bow, bowX as Bow));
+  consoleAnyLog(similarity.bow.cosine(bowX as Bow, bow3 as Bow));
+*/
+}
+
+export function getAllTopics() {
+  var topics = db.getCollection<TopicData>(topics_collection_name);
+  return topics.find();
+}
+
+function initDB()
 {
   consoleLog("initDB");
   if (db == null)
@@ -83,7 +126,6 @@ export function initDB()
     db = new loki('ra.db', 
     { 
       autoload: true,
-      autoloadCallback : databaseInitialize,
       autosave: true, 
       autosaveInterval: 1000            
     }
@@ -91,11 +133,75 @@ export function initDB()
   }
 }
 
-async function databaseInitialize() {
-  initTopics();
+export function databaseInitialize() {
+  initDB();
   initKeys();
-  await wait(3000);
+  initTopics();
+  initVectors();
+  initPages();
 } 
+
+function initVectors()
+{
+  consoleLog("initVectors");
+  var vectors = db.getCollection<VectorMetaData>(vectors_collection_name);
+  if (vectors == null)
+  {
+    vectors = db.addCollection<VectorMetaData>(vectors_collection_name, {
+      unique: <["id"]>["id"],
+      indices: <["id"]>["id"],
+      autoupdate: true
+    });
+  }
+}
+
+function SetVectorMetaData(metadatas:VectorMetaData[]) {
+  consoleLog("SetVectorMetaData");
+  consoleAnyLog(metadatas);
+  var vectors = db.getCollection<VectorMetaData>(vectors_collection_name);
+  if (vectors)
+  {
+    vectors.insert(metadatas);
+  }
+}
+
+export function getCurrentVectors() {
+  var currentId = getKey("currentTopic",null);
+  consoleLog("getCurrentVectors:"+currentId);
+  var vectors = db.getCollection<VectorMetaData>(vectors_collection_name);
+  return vectors.find({ key : { $eq: parseInt(currentId) } });
+}
+
+function initPages()
+{
+  consoleLog("initPages");
+  var pages = db.getCollection<PageMetaData>(pages_collection_name);
+  if (pages == null)
+  {
+    pages = db.addCollection<PageMetaData>(pages_collection_name, {
+      unique: <["id"]>["id"],
+      indices: <["id"]>["id"],
+      autoupdate: true
+    });
+  }
+}
+
+function SetPageMetaData(metadatas:PageMetaData[]) {
+  consoleLog("SetPageMetaData");
+  consoleAnyLog(metadatas);
+  var pages = db.getCollection<PageMetaData>(pages_collection_name);
+  if (pages)
+  {
+    pages.insert(metadatas);
+  }
+}
+
+export function getCurrentPages() {
+  var currentId = getKey("currentTopic",null);
+  consoleLog("getCurrentPages:"+currentId);
+  var vectors = db.getCollection<PageMetaData>(pages_collection_name);
+  return vectors.find({ key : { $eq: parseInt(currentId) } });
+}
 
 function initTopics()
 {
@@ -155,7 +261,7 @@ export function getCurrentTopicFiles() {
   return [];
 }
 
-export async function setCurrentTopicQuery(query:string) {
+export function setCurrentTopicQuery(query:string) {
   var currentId = getKey("currentTopic",null);
   consoleLog("setCurrentTopicQuery:"+query);
   if (currentId)
@@ -174,7 +280,7 @@ export async function setCurrentTopicQuery(query:string) {
   }
 }
 
-export async function getCurrentTopicQuery() {
+export function getCurrentTopicQuery() {
   var currentId = getKey("currentTopic",null);
   consoleLog("getCurrentTopicQuery:"+currentId);
   if (currentId)
@@ -192,7 +298,7 @@ export async function getCurrentTopicQuery() {
   return "brak bieżącego tematu";
 }
 
-export async function getCurrentTopicTitle() {
+export function getCurrentTopicTitle() {
   var currentId = getKey("currentTopic",null);
   consoleLog("getCurrentTopicTitle:"+currentId);
   if (currentId)
@@ -222,7 +328,7 @@ function substringQuery(query:string)
   }
 }
 
-export async function prepareNewTopic(searchText:string)
+export function prepareNewTopic(searchText:string)
 {
   if (searchText && searchText!="" && getKey("apiKey","")!="")
   {
@@ -239,10 +345,6 @@ export async function prepareNewTopicFile(key:number, file:File, fileName: strin
   if (key > 0 && file && getKey("apiKey","")!="")
   {
     consoleLog("prepareNewTopicFile:"+fileName);
-    if (vectorStore == null)
-    {
-        vectorStore = new VectorStorage({ openAIApiKey: getKey("apiKey",""), openaiModel: getKey("apiModel","text-embedding-ada-002") });
-    }
     saveFile(file, fileName);
     setTopicFileName(key, fileName);
     await prepareFileContent(key, file, fileName);
@@ -264,26 +366,17 @@ async function prepareFileContent(key:number, file:File, fileName: string)
     let post1:string = "";
     let post2:string = "";
     let post3:string = "";
-    let apiPages = getKey("apiPages","1");
-    let sentencesCount = 0;
-    let pagesLimit = Number.parseInt(apiPages);
-    if (pagesLimit > doc.length)
-    {
-      pagesLimit = doc.length;
-    }
-    if (Number.parseInt(apiPages) == 0)
-    {
-      pagesLimit = doc.length;
-    }
-    for (let p = 0; p < pagesLimit; p++){
-      const nlpdoc = winknlp.readDoc(doc[p].pageContent.toString());
+    var metadatas:VectorMetaData[];
+    metadatas= [];
+    var pages:PageMetaData[];
+    pages= [];
+    for (let p = 0; p < doc.length; p++){
+      const pageText = doc[p].pageContent.toString();
+      const nlpdoc = winknlp.readDoc(pageText);
       consoleLog("prepareFileContent page:" + p.toString());
       const items = nlpdoc.sentences();
+      pages.push({id: fileName+":"+(p+1).toString(), text:pageText, page:p+1, filename:fileName, key:key });
       consoleLog("prepareFileContent sentences count:" + items.length().toString());
-      var texts:string[];
-      var metadatas:object[];
-      texts = [];
-      metadatas= [];
       for (let n = 0; n < items.length(); n++){
         pre3="";
         pre2="";
@@ -310,32 +403,17 @@ async function prepareFileContent(key:number, file:File, fileName: string)
         if (n < items.length()-3) {
           post3 = items.itemAt(n+3).out();
         }
-        texts.push(text);
-        metadatas.push({filename: fileName, key: key, pre1:pre1, pre2:pre2, pre3:pre3, post1:post1, post2:post2, post3:post3 });
-        sentencesCount = sentencesCount + 1;
-        if (sentencesCount == 50 || n == items.length()-1)
-        {
-          consoleLog("prepareFileContent PrepareVectors");
-          var apiTimeout = getKey("apiTimeout","20000");
-          await wait(Number.parseInt(apiTimeout));
-          PrepareVectors(vectorStore, texts, metadatas);
-          texts=[];
-          metadatas=[];
-          sentencesCount=0;
-        }
+        metadatas.push({id: (p+1).toString()+":"+(n+1).toString(), score:0, text:text, page:p+1, filename:fileName, key:key, pre1:pre1, pre2:pre2, pre3:pre3, post1:post1, post2:post2, post3:post3 });
       };
     }
+    SetVectorMetaData(metadatas);
+    SetPageMetaData(pages);
   }
 }
 
 async function wait(ms:number)
 {
   await new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function PrepareVectors(vectorStore:VectorStorage, texts:string[], metadatas: object[])
-{
-  await vectorStore.addTexts(texts, metadatas);
 }
 
 export function saveFile(file: File, fileName: string)
@@ -394,7 +472,6 @@ export function setKey(key:string, value:string) {
 
 export function getKey(key:string,defaultVal:string) {
   consoleLog("getKey:"+key+":"+defaultVal);
-  initKeys();
   var keys = db.getCollection<KeyData>(keys_collection_name);
   if (keys)
   {
@@ -403,10 +480,12 @@ export function getKey(key:string,defaultVal:string) {
     {
       if (!data.value || data.value =="")
       {
+        consoleLog("getKey:"+key+":"+defaultVal);
         return defaultVal;
       }
       else
       {
+        consoleLog("getKey:"+key+":"+data.value);
         return data.value;
       }
     }
@@ -416,19 +495,97 @@ export function getKey(key:string,defaultVal:string) {
 
 export async function prepareResults()
 {
-  if (vectorStore == null)
-  {
-      vectorStore = new VectorStorage({ openAIApiKey: getKey("apiKey",""), openaiModel: getKey("apiModel","text-embedding-ada-002") });
-  }
-  var paramK = getKey("paramK","8");
-  var queryContent = await getCurrentTopicQuery();
+  var queryContent = getCurrentTopicQuery();
   consoleLog("prepareResults for:"+queryContent);
-  const res = await vectorStore.similaritySearch({
-    query: queryContent,
-    k:Number.parseInt(paramK)
+  const vectors = getCurrentVectors();
+  consoleAnyLog(vectors);
+  const pages = getCurrentPages();
+  consoleAnyLog(pages);
+  const modelForChat = new OpenAI({ openAIApiKey: getKey("apiKey",""), modelName: "gpt-3.5-turbo", temperature: 0.9 });
+  const modelForChat2 = new OpenAI({ openAIApiKey: getKey("apiKey",""), modelName: "gpt-3.5-turbo", temperature: 0.9 });
+  var res1 = "CB1R is widely expressed in the brain, with lower levels observed in the peripheral circulation. (source)\
+  CB1Rs are widespread in the hippocampus, cerebellum, cerebral cortex, basal ganglia, amygdala, and sensory motor sectors of the striatum. (source)\
+  CB1Rs are sparsely distributed in the brainstem, diencephalon, and spinal cord. (source)\
+  CB1Rs are mostly distributed presynaptically, with much higher density in GABA-ergic than in glutamatergic neurons. (source)\
+  CB1Rs are most abundant in the hippocampal GABA-ergic interneurons. (source)";
+  var res2 = "CB1R is widely expressed in the brain, with lower levels observed in the peripheral circulation.\
+\
+  CB1Rs are widespread in the hippocampus, cerebellum, cerebral cortex, basal ganglia, amyglada and sensory motor sectors of the striatum.\
+  \
+  CB1Rs are mostly distributed presynaptically, with much higher density in GABA-ergic than in glutamatergic neurons.\
+  \
+  The highest CB1R content is found on the GABA-ergic synapses of hippocampus CCK-positive interneurons.";
+  
+  for (let p = 0; p < pages.length; p++){
+    const pageText = pages[p].text;
+    consoleLog("callChatGPT 1");
+    let res1 = await modelForChat.call(
+      "Based on the below text, list cited sentences that answer : where is CB1R located in brain?. Do not generate any additional text.  \n\n" + pageText
+    );
+    consoleLog(res1);
+    consoleLog("callChatGPT 2");
+    let res2 = await modelForChat2.call(
+      "Based on the below text, find sentences which deal with the subject: where is CB1R located in brain. Do not generate any additional text.  \n\n" + pageText
+    );
+    consoleLog(res2);
+    break;
+  };
+  
+  consoleLog("search");
+  var result:VectorMetaData[];
+  result = [];
+  var resultA:string[];
+  resultA = [];
+  var resultB:string[];
+  resultB = [];
+  let winknlp = nlp(model);
+  const docRes1 = winknlp.readDoc(res1);
+  const items1 = docRes1.sentences();
+  const docRes2 = winknlp.readDoc(res2);
+  const items2 = docRes2.sentences();
+  vectors.forEach(v => {
+    for (let n = 0; n < items1.length(); n++){
+      const doc1 = winknlp.readDoc(v.text);
+      const doc2 = winknlp.readDoc(items1.itemAt(n).out());
+      const set1 = doc1.tokens().out(winknlp.its.value, winknlp.as.set);
+      const set2 = doc2.tokens().out(winknlp.its.value, winknlp.as.set);
+      const simX = similarity.set.oo(set1 as Set<string>, set2 as Set<string>);
+      if (simX > 0.40)
+      {
+        if (!resultA.includes(v.text))
+        {
+          resultA.push(v.text);
+        }
+      }
+    }
+    for (let n = 0; n < items2.length(); n++){
+      const doc1 = winknlp.readDoc(v.text);
+      const doc2 = winknlp.readDoc(items2.itemAt(n).out());
+      const set1 = doc1.tokens().out(winknlp.its.value, winknlp.as.set);
+      const set2 = doc2.tokens().out(winknlp.its.value, winknlp.as.set);
+      const simX = similarity.set.oo(set1 as Set<string>, set2 as Set<string>);
+      if (simX > 0.40)
+      {
+        if (!resultB.includes(v.text))
+        {
+          resultB.push(v.text);
+        }
+      }
+    };
   });
-  consoleAnyLog(res);
-  return res;
+  consoleAnyLog(resultA);
+  consoleAnyLog(resultB);
+  let intersection = resultA.filter(x => resultB.includes(x));
+  consoleAnyLog(intersection);
+  vectors.forEach(v => {
+    if (intersection.includes(v.text))
+    {
+      v.score = 1;
+      result.push(v);
+    }
+  });    
+  consoleAnyLog(result);
+  return result;
 }
 
 export function canUsingThisApp()

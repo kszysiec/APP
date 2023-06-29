@@ -6,14 +6,11 @@ export default {
     data: () => ({
       accessKey : getKey("accessKey",""),
       apiKey : getKey("apiKey",""),
-      apiModel : getKey("apiModel","text-embedding-ada-002"),
-      paramK : getKey("paramK","8"),
       successScore : getKey("successScore","0.85"),
       orangeScore : getKey("orangeScore","0.80"),
       blueScore : getKey("blueScore","0.70"),
       greyScore : getKey("greyScore","0.60"),
-      apiTimeout : getKey("apiTimeout","20000"),
-      apiPages : getKey("apiPages","1")
+      apiTimeout : getKey("apiTimeout","20000")
     }),
     methods:
     {
@@ -23,14 +20,11 @@ export default {
         }
         setKey("apiKey",this.apiKey);
         setKey("accessKey",this.accessKey);
-        setKey("apiModel",this.apiModel);
-        setKey("paramK",this.paramK);
         setKey("successScore",this.successScore);
         setKey("orangeScore",this.orangeScore);
         setKey("blueScore",this.blueScore);
         setKey("greyScore",this.greyScore);
         setKey("apiTimeout",this.apiTimeout);
-        setKey("apiPages",this.apiPages);
       }
     }
     }
@@ -70,28 +64,6 @@ export default {
           <v-textarea
             v-model="apiKey"
             label="Wpisz klucz API do wyszukiwania"
-            auto-grow
-            variant="outlined"
-            rows="1"
-            row-height="10"
-            shaped
-            class="text-h5"
-       ></v-textarea>
-
-       <v-textarea
-            v-model="apiModel"
-            label="Wpisz model API do wyszukiwania"
-            auto-grow
-            variant="outlined"
-            rows="1"
-            row-height="10"
-            shaped
-            class="text-h5"
-       ></v-textarea>
-
-       <v-textarea
-            v-model="paramK"
-            label="Wpisz sumaryczną ilość wyszukiwanych jednorazowo wyników"
             auto-grow
             variant="outlined"
             rows="1"
@@ -147,17 +119,6 @@ export default {
        <v-textarea
             v-model="apiTimeout"
             label="Wpisz opóźnienie API między wywołaniami (ms)"
-            auto-grow
-            variant="outlined"
-            rows="1"
-            row-height="10"
-            shaped
-            class="text-h5"
-       ></v-textarea>
-
-       <v-textarea
-            v-model="apiPages"
-            label="Wpisz ilość analizowanych stron w każdym dokumencie"
             auto-grow
             variant="outlined"
             rows="1"

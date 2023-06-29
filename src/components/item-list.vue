@@ -38,7 +38,7 @@ async mounted() {
   var results = await prepareResults();
   var counter = 1;
   results.forEach(element => {
-    let meta = element.metadata as VectorMetaData;
+    let meta = element as VectorMetaData;
     let successScore = getKey("successScore","0.85");
     let orangeScore = getKey("orangeScore","0.80");
     let blueScore = getKey("blueScore","0.70");
@@ -58,7 +58,7 @@ async mounted() {
     }
     if (element.score > Number.parseFloat(greyScore))
     {
-        this.visibleCards.push({id: counter.toString(), filename : meta.filename, key : meta.key, score : element.score, color : colorName, pre2 : meta.pre2, pre1: meta.pre1, text : element.text, post1: meta.post1, post2 : meta.post2} as CardData);
+        this.visibleCards.push({id: counter.toString(), filename : meta.filename, page: meta.page, key : meta.key, score : element.score, color : colorName, pre2 : meta.pre2, pre1: meta.pre1, text : element.text, post1: meta.post1, post2 : meta.post2} as CardData);
         counter++;
     }
   });
