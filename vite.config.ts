@@ -7,9 +7,13 @@ import layouts from 'vite-plugin-vue-layouts';
 import components from 'unplugin-vue-components/vite'
 import autoImport from 'unplugin-auto-import/vite'
 import wasm from 'vite-plugin-wasm'
+import topLevelAwait from "vite-plugin-top-level-await"
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  build: {
+    target: 'esnext' //browsers can handle the latest ES features
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -17,6 +21,7 @@ export default defineConfig({
   }, 
   plugins: [
     wasm(),
+    topLevelAwait(),
     vue({
       template: {
         compilerOptions: {

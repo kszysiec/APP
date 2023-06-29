@@ -28,7 +28,7 @@
         {
           if (this.searchText && this.searchText!="")
           {
-            this.key = await prepareNewTopic(this.searchText);
+            this.key = prepareNewTopic(this.searchText);
             this.progress = 10;
             if (this.pdfFiles)
             {

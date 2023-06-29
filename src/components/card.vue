@@ -55,7 +55,7 @@
         <v-alert
           icon="mdi-file-pdf-box"
           title="Zobacz cały źródłowy dokument"
-        >Umożliwia otwarcie źródłowego dokumentu w przeglądarce ({{ filename }})</v-alert>
+        >Umożliwia otwarcie źródłowego dokumentu w przeglądarce ({{ filename }}) ({{ page }})</v-alert>
       </v-tooltip>
     </v-btn>
 
@@ -256,6 +256,10 @@ export default {
     },
     text: {
       type: String,
+      required: true
+    },
+    page: {
+      type: Number,
       required: true
     },
     pre2: {

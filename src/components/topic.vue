@@ -17,19 +17,19 @@
         currentTopicTitle:"brak bieżącego tematu",
         currentTopicQuery:"brak bieżącego tematu"
     }),
-    async mounted() {
-        this.currentTopicTitle = await getCurrentTopicTitle();
-        this.currentTopicQuery = await getCurrentTopicQuery();
+    mounted() {
+        this.currentTopicTitle = getCurrentTopicTitle();
+        this.currentTopicQuery = getCurrentTopicQuery();
     },
     methods:
     {
-      async onCloseClick(e) {
+      onCloseClick(e) {
         if (!e) {
           return;
         }
         this.dialog_selection = false; 
-        this.currentTopicTitle = await getCurrentTopicTitle(); 
-        this.currentTopicQuery = await getCurrentTopicQuery();
+        this.currentTopicTitle = getCurrentTopicTitle(); 
+        this.currentTopicQuery = getCurrentTopicQuery();
       },
       onClick(e) {
         if (!e) {
