@@ -37,14 +37,16 @@ data() {
 async mounted() {
   var results = await prepareResults();
   var counter = 1;
+  let successScore = getKey("successScore","0.85");
+  let orangeScore = getKey("orangeScore","0.80");
+  let blueScore = getKey("blueScore","0.70");
+  let greyScore = getKey("greyScore","0.60");
   results.forEach(element => {
     let meta = element as VectorMetaData;
-    let successScore = getKey("successScore","0.85");
-    let orangeScore = getKey("orangeScore","0.80");
-    let blueScore = getKey("blueScore","0.70");
-    let greyScore = getKey("greyScore","0.60");
     let colorName = "success";
-    if (element.score < Number.parseFloat(successScore))
+    this.visibleCards.push({id: counter.toString(), filename : meta.filename, page: meta.page, key : meta.key, score : element.score, color : colorName, pre2 : meta.pre2, pre1: meta.pre1, text : element.text, post1: meta.post1, post2 : meta.post2} as CardData);
+    counter++;
+    /*if (element.score < Number.parseFloat(successScore))
     {
       colorName = "orange-darken-1";
     }
@@ -60,7 +62,7 @@ async mounted() {
     {
         this.visibleCards.push({id: counter.toString(), filename : meta.filename, page: meta.page, key : meta.key, score : element.score, color : colorName, pre2 : meta.pre2, pre1: meta.pre1, text : element.text, post1: meta.post1, post2 : meta.post2} as CardData);
         counter++;
-    }
+    }*/
   });
 },
 methods: {

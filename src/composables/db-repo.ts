@@ -165,6 +165,19 @@ function SetVectorMetaData(metadatas:VectorMetaData[]) {
   }
 }
 
+function updateVectorMetaData(metadata:VectorMetaData)
+{
+  consoleLog("updateVectorMetaData");
+  consoleAnyLog(metadata);
+  var vectors = db.getCollection<VectorMetaData>(vectors_collection_name);
+  if (vectors)
+  {
+    var data = vectors.findOne({id: metadata.id});
+    data.score = metadata.score;
+    vectors.update(data);
+  }
+}
+
 export function getCurrentVectors() {
   var currentId = getKey("currentTopic",null);
   consoleLog("getCurrentVectors:"+currentId);
@@ -496,42 +509,61 @@ export function getKey(key:string,defaultVal:string) {
 export async function prepareResults()
 {
   var queryContent = getCurrentTopicQuery();
-  consoleLog("prepareResults for:"+queryContent);
-  const vectors = getCurrentVectors();
+  consoleLog("prepareResults for ["+ queryContent + "]");
+  var vectors:VectorMetaData[];
+  vectors = getCurrentVectors();
   consoleAnyLog(vectors);
   const pages = getCurrentPages();
   consoleAnyLog(pages);
-  const modelForChat = new OpenAI({ openAIApiKey: getKey("apiKey",""), modelName: "gpt-3.5-turbo", temperature: 0.9 });
-  const modelForChat2 = new OpenAI({ openAIApiKey: getKey("apiKey",""), modelName: "gpt-3.5-turbo", temperature: 0.9 });
-  var res1 = "CB1R is widely expressed in the brain, with lower levels observed in the peripheral circulation. (source)\
-  CB1Rs are widespread in the hippocampus, cerebellum, cerebral cortex, basal ganglia, amygdala, and sensory motor sectors of the striatum. (source)\
-  CB1Rs are sparsely distributed in the brainstem, diencephalon, and spinal cord. (source)\
-  CB1Rs are mostly distributed presynaptically, with much higher density in GABA-ergic than in glutamatergic neurons. (source)\
-  CB1Rs are most abundant in the hippocampal GABA-ergic interneurons. (source)";
-  var res2 = "CB1R is widely expressed in the brain, with lower levels observed in the peripheral circulation.\
-\
-  CB1Rs are widespread in the hippocampus, cerebellum, cerebral cortex, basal ganglia, amyglada and sensory motor sectors of the striatum.\
-  \
-  CB1Rs are mostly distributed presynaptically, with much higher density in GABA-ergic than in glutamatergic neurons.\
-  \
-  The highest CB1R content is found on the GABA-ergic synapses of hippocampus CCK-positive interneurons.";
-  
-  for (let p = 0; p < pages.length; p++){
+  let requestA = getKey("requestA","");
+  let requestB = getKey("requestB","");
+  let tempA = parseFloat(getKey("temperatureA","0.9"));
+  let tempB = parseFloat(getKey("temperatureB","0.9"));
+  let apiKey = getKey("apiKey","");
+  let requestType = getKey("requestType","A+B");
+  let apiModel = getKey("apiModel","gpt-3.5-turbo");
+  const modelForChat = new OpenAI({ openAIApiKey: apiKey, modelName: apiModel, temperature: tempA });
+  const modelForChat2 = new OpenAI({ openAIApiKey: apiKey, modelName: apiModel, temperature: tempB });
+  var res1 = "";
+  var res2 = "";  
+  let pageLimit = parseInt(getKey("pageLimit","1"));
+  if (pageLimit>pages.length)
+  {
+    pageLimit = pages.length;
+  }
+  for (let p = 0; p < pageLimit; p++){
+
     const pageText = pages[p].text;
-    consoleLog("callChatGPT 1");
-    let res1 = await modelForChat.call(
-      "Based on the below text, list cited sentences that answer : where is CB1R located in brain?. Do not generate any additional text.  \n\n" + pageText
-    );
-    consoleLog(res1);
-    consoleLog("callChatGPT 2");
-    let res2 = await modelForChat2.call(
-      "Based on the below text, find sentences which deal with the subject: where is CB1R located in brain. Do not generate any additional text.  \n\n" + pageText
-    );
-    consoleLog(res2);
-    break;
+    
+    if (requestType=="A+B" || requestType=="A-B" || requestType=="A")
+    {
+      consoleLog("callChatGPT request A");
+      let queryA = requestA.replace("[query]", queryContent);
+      consoleLog("request A: ");
+      consoleLog(queryA);
+      res1 = await modelForChat.call(
+        queryA+"\n\n" + pageText
+      );
+      consoleLog("response A: ");
+      consoleLog(res1);
+    }
+
+    if (requestType=="A+B" || requestType=="A-B" || requestType=="B")
+    {
+      consoleLog("callChatGPT request B");
+      let queryB = requestB.replace("[query]", queryContent);
+      consoleLog("request B: ");
+      consoleLog(queryB);
+      res2 = await modelForChat.call(
+        queryB+"\n\n" + pageText
+      );
+      consoleLog("response B: ");
+      consoleLog(res2);
+    }
+
   };
   
-  consoleLog("search");
+  consoleLog("analyzing responses");
   var result:VectorMetaData[];
   result = [];
   var resultA:string[];
@@ -543,48 +575,110 @@ export async function prepareResults()
   const items1 = docRes1.sentences();
   const docRes2 = winknlp.readDoc(res2);
   const items2 = docRes2.sentences();
+
+  let similarityLevel = parseFloat(getKey("similarityLevel","0.6"));
+
   vectors.forEach(v => {
-    for (let n = 0; n < items1.length(); n++){
-      const doc1 = winknlp.readDoc(v.text);
-      const doc2 = winknlp.readDoc(items1.itemAt(n).out());
-      const set1 = doc1.tokens().out(winknlp.its.value, winknlp.as.set);
-      const set2 = doc2.tokens().out(winknlp.its.value, winknlp.as.set);
-      const simX = similarity.set.oo(set1 as Set<string>, set2 as Set<string>);
-      if (simX > 0.40)
-      {
-        if (!resultA.includes(v.text))
-        {
-          resultA.push(v.text);
-        }
-      }
-    }
-    for (let n = 0; n < items2.length(); n++){
-      const doc1 = winknlp.readDoc(v.text);
-      const doc2 = winknlp.readDoc(items2.itemAt(n).out());
-      const set1 = doc1.tokens().out(winknlp.its.value, winknlp.as.set);
-      const set2 = doc2.tokens().out(winknlp.its.value, winknlp.as.set);
-      const simX = similarity.set.oo(set1 as Set<string>, set2 as Set<string>);
-      if (simX > 0.40)
-      {
-        if (!resultB.includes(v.text))
-        {
-          resultB.push(v.text);
-        }
-      }
-    };
-  });
-  consoleAnyLog(resultA);
-  consoleAnyLog(resultB);
-  let intersection = resultA.filter(x => resultB.includes(x));
-  consoleAnyLog(intersection);
-  vectors.forEach(v => {
-    if (intersection.includes(v.text))
+    if (requestType=="A+B" || requestType=="A-B" || requestType=="A")
     {
-      v.score = 1;
-      result.push(v);
+      for (let n = 0; n < items1.length(); n++){
+        const doc1 = winknlp.readDoc(v.text);
+        const doc2 = winknlp.readDoc(items1.itemAt(n).out());
+        const set1 = doc1.tokens().out(winknlp.its.value, winknlp.as.set);
+        const set2 = doc2.tokens().out(winknlp.its.value, winknlp.as.set);
+        const simX = similarity.set.oo(set1 as Set<string>, set2 as Set<string>);
+        if (simX > similarityLevel)
+        {
+          v.score = simX;
+          updateVectorMetaData(v);  
+          if (!resultA.includes(v.text))
+          {
+            resultA.push(v.text);
+          }
+        }
+      }
     }
-  });    
+
+    if (requestType=="A+B" || requestType=="A-B" || requestType=="B")
+    {
+      for (let n = 0; n < items2.length(); n++){
+        const doc1 = winknlp.readDoc(v.text);
+        const doc2 = winknlp.readDoc(items2.itemAt(n).out());
+        const set1 = doc1.tokens().out(winknlp.its.value, winknlp.as.set);
+        const set2 = doc2.tokens().out(winknlp.its.value, winknlp.as.set);
+        const simX = similarity.set.oo(set1 as Set<string>, set2 as Set<string>);
+        if (simX > similarityLevel)
+        {
+          v.score = simX;
+          updateVectorMetaData(v);  
+          if (!resultB.includes(v.text))
+          {
+            resultB.push(v.text);
+          }
+        }
+      }
+    }
+  });
+
+  if (requestType=="A+B" || requestType=="A-B" || requestType=="A")
+  {
+    consoleLog("result A:");
+    consoleAnyLog(resultA);
+  }
+  if (requestType=="A+B" || requestType=="A-B" || requestType=="B")
+  {
+    consoleLog("result B:");
+    consoleAnyLog(resultB);
+  }
+
+  if (requestType=="A+B")
+  {
+    let intersection = resultA.concat(resultB);
+    vectors = getCurrentVectors();
+    vectors.forEach(v => {
+      if (intersection.includes(v.text))
+      {
+        result.push(v);
+      }
+    });    
+  }
+  if (requestType=="A-B")
+  {
+    let intersection = resultA.filter(x => resultB.includes(x));
+    vectors = getCurrentVectors();
+    vectors.forEach(v => {
+      if (intersection.includes(v.text))
+      {
+        result.push(v);
+      }
+    });    
+  }
+  if (requestType=="A")
+  {
+    let intersection = resultA;
+    vectors = getCurrentVectors();
+    vectors.forEach(v => {
+      if (intersection.includes(v.text))
+      {
+        result.push(v);
+      }
+    });    
+  }
+  if (requestType=="B")
+  {
+    let intersection = resultB;
+    vectors = getCurrentVectors();
+    vectors.forEach(v => {
+      if (intersection.includes(v.text))
+      {
+        result.push(v);
+      }
+    });    
+  }
+
+  consoleLog("result final:");
   consoleAnyLog(result);
+
   return result;
 }
 
