@@ -8,7 +8,6 @@ declare global {
   const EffectScope: typeof import('vue')['EffectScope']
   const PageMetaData: typeof import('./src/composables/db-repo')['PageMetaData']
   const VectorMetaData: typeof import('./src/composables/db-repo')['VectorMetaData']
-  const callChatGPT: typeof import('./src/composables/db-repo')['callChatGPT']
   const canUsingThisApp: typeof import('./src/composables/db-repo')['canUsingThisApp']
   const computed: typeof import('vue')['computed']
   const createApp: typeof import('vue')['createApp']

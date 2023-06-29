@@ -6,7 +6,6 @@ import { PDFJS } from "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js";
 import nlp from "wink-nlp";
 import model from "wink-eng-lite-web-model";
 import similarity from "wink-nlp/utilities/similarity";
-import {Bow} from "wink-nlp";
 
 class KeyData {
   name: string;
@@ -76,6 +75,8 @@ var pages_collection_name = "pages.v2.0.0";
 PDFJS.workerSrc = "pdf.worker.js";
 globalThis.Buffer = Buffer;
 
+databaseInitialize();
+
 function consoleLog(msg:string)
 {
   console.log(msg);
@@ -84,33 +85,6 @@ function consoleLog(msg:string)
 function consoleAnyLog(obj)
 {
   console.log(obj);
-}
-
-export function callChatGPT()
-{
-/*
-  let winknlp = nlp(model);
-  const doc1 = winknlp.readDoc("Two endocannabinoid receptors are known: CB1R, which is widely expressed in the brain, with lower levels observed in the peripheral circulation, and CB2R, which is mostly expressed in the peripheral circulation, predominantly in immune-related organs and cells.");
-  const doc2 = winknlp.readDoc("Two endocannabinoid receptors are known: CB1R, which is widely\nexpressed in the brain, with lower levels observed in the peripheral\ncirculation, and CB2R, which is mostly expressed in the peripheral\ncirculation, predominantly in immune-related organs and cells.");
-  const docX = winknlp.readDoc("In the brain, CB1Rs are widespread in the     hippocampus, cerebellum, cerebral cortex, basal ganglia, amyglada and     sensory motor sectors of the striatum; however, they are sparsely distributed     in the brainstem, diencephalon and spinal cord (Herkenham     et al., 1991; Glass et al., 1997; Van Waes et al., 2012; Chevaleyre et al.,     2006).");
-  const docPage = winknlp.readDoc(pageText);
-  const set1 = doc1.tokens().out(winknlp.its.value, winknlp.as.set);
-  const set2 = doc2.tokens().out(winknlp.its.value, winknlp.as.set);
-  const setX = docX.tokens().out(winknlp.its.value, winknlp.as.set);
-  const bow1 = doc1.tokens().out(winknlp.its.value, winknlp.as.bow);
-  const bow2 = doc2.tokens().out(winknlp.its.value, winknlp.as.bow);
-  const bow3 = docPage.tokens().out(winknlp.its.value, winknlp.as.bow);
-  const bowX = docX.tokens().out(winknlp.its.value, winknlp.as.bow);
-  consoleAnyLog(similarity.set.oo(set1 as Set<string>, set2 as Set<string>));
-  consoleAnyLog(similarity.set.oo(set1 as Set<string>, setX as Set<string>));
-  consoleAnyLog(similarity.set.oo(set2 as Set<string>, setX as Set<string>));
-  consoleAnyLog(similarity.bow.cosine(bow1 as Bow, bow2 as Bow));
-  consoleAnyLog(similarity.bow.cosine(bow1 as Bow, bow3 as Bow));
-  consoleAnyLog(similarity.bow.cosine(bow2 as Bow, bow3 as Bow));
-  consoleAnyLog(similarity.bow.cosine(bow1 as Bow, bowX as Bow));
-  consoleAnyLog(similarity.bow.cosine(bow2 as Bow, bowX as Bow));
-  consoleAnyLog(similarity.bow.cosine(bowX as Bow, bow3 as Bow));
-*/
 }
 
 export function getAllTopics() {
